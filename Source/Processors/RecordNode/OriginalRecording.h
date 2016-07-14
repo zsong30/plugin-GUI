@@ -118,12 +118,14 @@ private:
     struct ProcInfo
     {
         int id;
+		int subId;
         float sampleRate;
         OwnedArray<ChannelInfo> channels;
     };
 
     OwnedArray<ProcInfo> processorArray;
     int lastProcId;
+	int lastSubProcId;
     String recordPath;
     int64 startTimestamp;
 

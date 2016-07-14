@@ -50,18 +50,26 @@ String HDF5Recording::getEngineID() const
 
 void HDF5Recording::registerProcessor(const GenericProcessor* proc)
 {
-    HDF5RecordingInfo* info = new HDF5RecordingInfo();
-	//This is a VERY BAD thig to do. temporary only until we fix const-correctness on GenericEditor methods
+   
+	//The const_casting is a VERY BAD thing to do. temporary only until we fix const-correctness on GenericEditor methods
 	//(which implies modifying all the plugins and processors)
-    info->sample_rate = const_cast<GenericProcessor*>(proc)->getSampleRate();
-    info->bit_depth = 16;
-    info->multiSample = false;
-    infoArray.add(info);
-    fileArray.add(new KWDFile());
-    bitVoltsArray.add(new Array<float>);
-    sampleRatesArray.add(new Array<float>);
-	channelsPerProcessor.add(0);
-    processorIndex++;
+	for (int i = 0; i < const_cast<GenericProcessor*>(proc)->getNumSampleRates(); i++)
+	{
+		HDF5RecordingInfo* info = new HDF5RecordingInfo();
+
+		info->sample_rate = const_cast<GenericProcessor*>(proc)->getSampleRate(i);
+		info->bit_depth = 16;
+		info->multiSample = false;
+		info->nodeId = proc->nodeId;
+		info->subProcessorId = i;
+		infoArray.add(info);
+		fileArray.add(new KWDFile());
+		bitVoltsArray.add(new Array<float>);
+		sampleRatesArray.add(new Array<float>);
+		channelsPerProcessor.add(0);
+		processorIndex++;
+		std::cout << "Adding processor with node id " << info->nodeId << ", subProcessorId = " << info->subProcessorId << ", sample rate = " << info->sample_rate << std::endl;
+	}   
 }
 
 void HDF5Recording::resetChannels()
@@ -83,9 +91,28 @@ void HDF5Recording::resetChannels()
         spikesFile->resetChannels();
 }
 
-void HDF5Recording::addChannel(int index,const Channel* chan)
+void HDF5Recording::addChannel(int index, const Channel* chan)
 {
-    processorMap.add(processorIndex);
+	int pIndex = 0;
+
+	for (int i = 0; i < infoArray.size(); i++)
+	{
+
+		if (index == 0)
+		{
+			std::cout << "Node id: " << chan->nodeId << ", subP id: " << chan->subProcessorId << std::endl;
+			std::cout << "Info array " << i << ": " << infoArray[i]->nodeId << "_" << infoArray[i]->subProcessorId << std::endl;
+		}
+
+		if (chan->nodeId == infoArray[i]->nodeId && chan->subProcessorId == infoArray[i]->subProcessorId)
+		{	
+			pIndex = i;
+			break;
+		}
+
+	}
+
+    processorMap.add(pIndex);
 }
 
 void HDF5Recording::openFiles(File rootFolder, int experimentNumber, int recordingNumber)
@@ -116,12 +143,15 @@ void HDF5Recording::openFiles(File rootFolder, int experimentNumber, int recordi
 	recordedChanToKWDChan.clear();
 	Array<int> processorRecPos;
 	processorRecPos.insertMultiple(0, 0, fileArray.size());
+
 	for (int i = 0; i < getNumRecordedChannels(); i++)
 	{
 		int index = processorMap[getRealChannel(i)];
+
 		if (!fileArray[index]->isOpen())
 		{
-			fileArray[index]->initFile(getChannel(getRealChannel(i))->nodeId, basepath);
+			fileArray[index]->initFile(getChannel(getRealChannel(i))->nodeId, getChannel(getRealChannel(i))->subProcessorId, basepath);
+			std::cout << "timestamp for channel " << i << " = " << getTimestamp(i) << std::endl;
 			infoArray[index]->start_time = getTimestamp(i);
 		}
 
@@ -230,7 +260,7 @@ void HDF5Recording::writeData(int writeChannel, int realChannel, const float* bu
 void HDF5Recording::endChannelBlock(bool lastBlock)
 {
 	int nCh = channelTimestampArray.size();
-	for (int ch = 0; ch < nCh; ++ch)
+	for (int ch = 0; ch < nCh; ++ch) 
 	{
 		int tsSize = channelTimestampArray[ch]->size();
 		if ((tsSize > 0) && ((tsSize > CHANNEL_TIMESTAMP_MIN_WRITE) || lastBlock))

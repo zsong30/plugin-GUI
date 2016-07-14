@@ -350,12 +350,13 @@ void LfpDisplayCanvas::update()
 			if (i < nChans)
 				sampleRate.add(processor->channels[i]->sampleRate);
 			else
-				sampleRate.add(processor->channels[i - 1]->sampleRate); // for event channel (IT'S A HACK -- BE CAREFUL!)
+				sampleRate.add(processor->channels[0]->sampleRate); // for event channel (IT'S A HACK -- BE CAREFUL!)
 		}
 		else
 			sampleRate.add(30000);
         
        // std::cout << "Sample rate for ch " << i << " = " << sampleRate[i] << std::endl; 
+	//	std::cout << "Sub-processor id for ch " << i << " = " << processor->channels[i]->subProcessorId << std::endl;
         displayBufferIndex.add(0);
         screenBufferIndex.add(0);
         lastScreenBufferIndex.add(0);

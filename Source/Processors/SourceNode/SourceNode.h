@@ -115,7 +115,7 @@ private:
     void timerCallback();
 
     ScopedPointer<DataThread> dataThread;
-    DataBuffer* inputBuffer;
+	Array<DataBuffer*> inputBuffers;
 
     uint64 timestamp;
     //uint64* eventCodeBuffer;

@@ -38,6 +38,7 @@ void Channel::reset()
     sampleRate = 44100.0f;
     bitVolts = 1.0f;
     sourceNodeId = -1;
+	subProcessorId = 0;
     isMonitored = false;
     isEnabled = true;
     recordIndex = -1;
@@ -61,6 +62,7 @@ Channel::Channel(const Channel& ch)
     bitVolts = ch.bitVolts;
     type = ch.type;
     sourceNodeId = ch.sourceNodeId;
+	subProcessorId = ch.subProcessorId;
     isMonitored = ch.isMonitored;
     isEnabled = ch.isEnabled;
     recordIndex = ch.recordIndex;

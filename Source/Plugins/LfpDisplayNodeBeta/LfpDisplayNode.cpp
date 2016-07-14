@@ -29,7 +29,7 @@ using namespace LfpDisplayNodeBeta;
 
 LfpDisplayNode::LfpDisplayNode()
     : GenericProcessor("LFP Viewer Beta"),
-      displayGain(1), bufferLength(20.0f),
+      displayGain(1), bufferLength(2.0f),
       abstractFifo(100)
 {
     //std::cout << " LFPDisplayNodeConstructor" << std::endl;
@@ -166,7 +166,7 @@ void LfpDisplayNode::handleEvent(int eventType, MidiMessage& event, int sampleNu
         
         
 
-        int nSamples = numSamples.at(eventSourceNodeId);
+        int nSamples = numSamples.at(eventSourceNodeId*10);
 
         int samplesToFill = nSamples - eventTime;
 
@@ -253,7 +253,7 @@ void LfpDisplayNode::initializeEventChannels()
 
         int samplesLeft = displayBuffer->getNumSamples() - index;
 
-        int nSamples = numSamples.at(eventSourceNodes[i]);
+        int nSamples = numSamples.at(eventSourceNodes[i]*10);
 
 
 

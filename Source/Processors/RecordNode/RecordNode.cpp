@@ -311,31 +311,40 @@ void RecordNode::setParameter(int parameterIndex, float newValue)
 		Array<int> chanProcessorMap;
 		Array<int> chanOrderinProc;
 		int lastProcessor = -1;
+		int lastSubProcessor = -1;
 		int procIndex = -1;
 		int chanProcOrder = 0;
+
 		for (int ch = 0; ch < totChans; ++ch)
 		{
 			Channel* chan = channelPointers[ch];
 			if (chan->getRecordState())
 			{
 				channelMap.add(ch);
+
 				//This is bassed on the assumption that all channels from the same processor are added contiguously
-				//If this behaviour changes, this check should be most thorough
-				if (chan->nodeId != lastProcessor)
+				//If this behaviour changes, this check should be more thorough
+				if (chan->nodeId != lastProcessor || chan->subProcessorId != lastSubProcessor)
 				{
 					lastProcessor = chan->nodeId;
+					lastSubProcessor = chan->subProcessorId;
+
 					RecordProcessorInfo* pi = new RecordProcessorInfo();
 					pi->processorId = chan->nodeId;
+					pi->subProcessorId = chan->subProcessorId;
 					procInfo.add(pi);
 					procIndex++;
 					chanProcOrder = 0;
+					
 				}
+
 				procInfo.getLast()->recordedChannels.add(channelMap.size());
 				chanProcessorMap.add(procIndex);
 				chanOrderinProc.add(chanProcOrder);
 				chanProcOrder++;
 			}
 		}
+
 		std::cout << "Num Recording Processors: " << procInfo.size() << std::endl;
 		int numRecordedChannels = channelMap.size();
 
@@ -458,7 +467,7 @@ void RecordNode::handleEvent(int eventType, MidiMessage& event, int samplePositi
             if (*(event.getRawData()+4) > 0) // saving flag > 0 (i.e., event has not already been processed)
             {
 				uint8 sourceNodeId = event.getNoteNumber();
-				int64 timestamp = timestamps[sourceNodeId] + samplePosition;
+				int64 timestamp = timestamps[sourceNodeId*10 + 0] + samplePosition;
 				m_eventQueue->addEvent(event, timestamp, eventType);
             }
         }
@@ -480,8 +489,9 @@ void RecordNode::process(AudioSampleBuffer& buffer,
 		{
 			int realChan = channelMap[chan];
 			int sourceNodeId = channelPointers[realChan]->sourceNodeId;
-			int nSamples = numSamples.at(sourceNodeId);
-			int timestamp = timestamps.at(sourceNodeId);
+			int subProcessorId = channelPointers[realChan]->subProcessorId;
+			int nSamples = numSamples.at(sourceNodeId*10 + subProcessorId);
+			int64 timestamp = timestamps.at(sourceNodeId*10 + subProcessorId);
 			m_dataQueue->writeChannel(buffer, chan, realChan, nSamples, timestamp);
 		}
 

@@ -27,7 +27,7 @@
 
 OriginalRecording::OriginalRecording() : separateFiles(false),
     recordingNumber(0), experimentNumber(0),  zeroBuffer(1, 50000),
-    eventFile(nullptr), messageFile(nullptr), lastProcId(0)
+	eventFile(nullptr), messageFile(nullptr), lastProcId(0), lastSubProcId(-1)
 {
     /*continuousDataIntegerBuffer = new int16[10000];
     continuousDataFloatBuffer = new float[10000];
@@ -96,6 +96,7 @@ void OriginalRecording::openFiles(File rootFolder, int experimentNumber, int rec
 
     processorArray.clear();
     lastProcId = 0;
+	lastSubProcId = -1;
 
     openFile(rootFolder,nullptr);
     openMessageFile(rootFolder);
@@ -176,11 +177,13 @@ void OriginalRecording::openFile(File rootFolder, Channel* ch)
     else
     {
         fileArray.set(ch->recordIndex,chFile);
-        if (ch->nodeId != lastProcId)
+        if (ch->nodeId != lastProcId || ch->subProcessorId != lastSubProcId)
         {
             lastProcId = ch->nodeId;
+			lastSubProcId = ch->subProcessorId;
             ProcInfo* p = new ProcInfo();
             p->id = ch->nodeId;
+			p->subId = ch->subProcessorId;
             p->sampleRate = ch->sampleRate;
             processorArray.add(p);
         }

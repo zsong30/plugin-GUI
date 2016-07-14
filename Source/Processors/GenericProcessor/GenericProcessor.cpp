@@ -522,18 +522,23 @@ void GenericProcessor::disableEditor()
 /** Used to get the number of samples in a given buffer, for a given channel. */
 int GenericProcessor::getNumSamples(int channelNum)
 {
-    int sourceNodeId, nSamples;
+	int sourceNodeId, subProcessorId, nSamples;
 
-    if (channelNum >= 0 && channelNum < channels.size())
-        sourceNodeId = channels[channelNum]->sourceNodeId;
-    else
-        return 0;
-
+	if (channelNum >= 0 && channelNum < channels.size())
+	{
+		subProcessorId = channels[channelNum]->subProcessorId;
+		sourceNodeId = channels[channelNum]->sourceNodeId;
+	}
+	else
+	{
+		return 0;
+	}
+       
     // std::cout << "Requesting samples for channel " << channelNum << " with source node " << sourceNodeId << std::endl;
 
     try
     {
-        nSamples = numSamples.at(sourceNodeId);
+		nSamples = numSamples.at(sourceNodeId*10 + subProcessorId);
     }
     catch (std::exception& e)
     {
@@ -547,7 +552,7 @@ int GenericProcessor::getNumSamples(int channelNum)
 
 
 /** Used to get the number of samples in a given buffer, for a given source node. */
-void GenericProcessor::setNumSamples(MidiBuffer& events, int sampleIndex)
+void GenericProcessor::setNumSamples(MidiBuffer& events, int sampleIndex, int subProcessorId)
 {
 
     // This amounts to adding a "buffer size" flag at a particular sample number,
@@ -565,29 +570,36 @@ void GenericProcessor::setNumSamples(MidiBuffer& events, int sampleIndex)
 
     int16 si = (int16) sampleIndex;
 
-    data[0] = BUFFER_SIZE;  // most-significant byte
-    data[1] = nodeId;       // least-significant byte
-    memcpy(data+2, &si, 2);
+    data[0] = BUFFER_SIZE; 
+	data[1] = nodeId; 
+	data[2] = subProcessorId;  
+    memcpy(data+3, &si, 2);
 
     events.addEvent(data,       // spike data
-                    4,          // total bytes
+                    5,          // total bytes
                     0); // sample index
 }
 
 /** Used to get the timestamp for a given buffer, for a given source node. */
 int64 GenericProcessor::getTimestamp(int channelNum)
 {
-    int sourceNodeId;
+	int subProcessorId, sourceNodeId;
     int64 ts;
 
-    if (channelNum >= 0 && channelNum < channels.size())
-        sourceNodeId = channels[channelNum]->sourceNodeId;
-    else
-        return 0;
+	if (channelNum >= 0 && channelNum < channels.size())
+	{
+		sourceNodeId = channels[channelNum]->sourceNodeId;
+		subProcessorId = channels[channelNum]->subProcessorId;
+	}
+	else
+	{
+		return 0;
+	}
+        
 
     try
     {
-        ts = timestamps.at(sourceNodeId);
+		ts = timestamps.at(sourceNodeId*10 + subProcessorId);
     }
     catch (std::exception& e)
     {
@@ -598,7 +610,7 @@ int64 GenericProcessor::getTimestamp(int channelNum)
 }
 
 /** Used to set the timestamp for a given buffer, for a given channel. */
-void GenericProcessor::setTimestamp(MidiBuffer& events, int64 timestamp)
+void GenericProcessor::setTimestamp(MidiBuffer& events, int64 timestamp, int subProcessorId)
 {
 
     //std::cout << "Setting timestamp to " << timestamp << std:;endl;
@@ -611,19 +623,19 @@ void GenericProcessor::setTimestamp(MidiBuffer& events, int64 timestamp)
     addEvent(events,    // MidiBuffer
              TIMESTAMP, // eventType
              0,         // sampleNum
-             nodeId,    // eventID
-             0,      // eventChannel
+			 nodeId,    // eventID
+             subProcessorId,      // eventChannel
              8,         // numBytes
              data,   // data
              true    // isTimestampEvent
             );
 
     //since the processor generating the timestamp won't get the event, add it to the map
-    timestamps[nodeId] = timestamp;
+	timestamps[nodeId*10 + subProcessorId] = timestamp;
 
     if (needsToSendTimestampMessage)
     {
-        String eventString = "Processor: " + String(getNodeId()) + " start time: " + String(timestamp) + "@" + String(getSampleRate()) + "Hz";
+		String eventString = "Processor: " + String(getNodeId()) + " sub-processor: " + String(subProcessorId) + " start time: " + String(timestamp) + "@" + String(getSampleRate()) + "Hz";
 
         CharPointer_UTF8 data = eventString.toUTF8();
 
@@ -675,17 +687,18 @@ int GenericProcessor::processEventBuffer(MidiBuffer& events)
             {
 
                 int16 nr;
-                memcpy(&nr, dataptr+2, 2);
+                memcpy(&nr, dataptr+3, 2);
 
                 numRead = nr;
 
-                uint8 sourceNodeId;
-                memcpy(&sourceNodeId, dataptr + 1, 1);
+                uint8 sourceNodeId, subProcessorId;
+				memcpy(&sourceNodeId, dataptr + 1, 1);
+				memcpy(&subProcessorId, dataptr + 2, 1);
 
-                numSamples[sourceNodeId] = numRead;
+				numSamples[int(sourceNodeId)*10 + int(subProcessorId)] = numRead;
 
-                //if (nodeId < 900)
-                //    std::cout << nodeId << " got " << numRead << " samples for " << (int) sourceNodeId << std::endl;
+            //    if (nodeId < 900)
+            //        std::cout << nodeId << " got " << numRead << " samples for " << (int) sourceNodeId << "-" << (int) subProcessorId << std::endl;
 
 
             }
@@ -694,13 +707,15 @@ int GenericProcessor::processEventBuffer(MidiBuffer& events)
                 int64 ts;
                 memcpy(&ts, dataptr+6, 8);
 
-                uint8 sourceNodeId;
-                memcpy(&sourceNodeId, dataptr + 1, 1);
+                uint8 sourceNodeId, subProcessorId;
 
-                timestamps[sourceNodeId] = ts;
+				memcpy(&sourceNodeId, dataptr + 2, 1);
+				memcpy(&subProcessorId, dataptr + 3, 1);
 
-                //if (nodeId < 900)
-                //    std::cout << nodeId << " got " << ts << " timestamp for " << (int) sourceNodeId << std::endl;
+				timestamps[int(sourceNodeId)*10 + int(subProcessorId)] = ts;
+
+              //  if (nodeId < 900)
+              //      std::cout << nodeId << " got " << ts << " timestamp for " << (int) sourceNodeId << "-" << (int) subProcessorId << std::endl;
 
             }
             else
@@ -1113,9 +1128,33 @@ double GenericProcessor::getTailLengthSeconds() const
     return 1.0f;
 }
 
-float GenericProcessor::getSampleRate()
+float GenericProcessor::getSampleRate(int subProcessorId)
 {
+	for (int i = 0; i < channels.size(); i++)
+	{
+		if (channels[i]->subProcessorId == subProcessorId)
+		{
+			return channels[i]->sampleRate;
+			break;
+		}
+	}
     return settings.sampleRate;
+}
+
+int GenericProcessor::getNumSampleRates()
+{
+	int totalSampleRates = 0;
+	int subProcessorId = -1;
+
+	for (int i = 0; i < channels.size(); i++)
+	{
+		if (channels[i]->subProcessorId != subProcessorId)
+		{
+			totalSampleRates++;
+			subProcessorId = channels[i]->subProcessorId;
+		}
+	}
+	return totalSampleRates;
 }
 
 float GenericProcessor::getDefaultSampleRate()

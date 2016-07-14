@@ -31,7 +31,7 @@
 SourceNode::SourceNode(const String& name_, DataThreadCreator dt)
     : GenericProcessor(name_),
       sourceCheckInterval(2000), wasDisabled(true), dataThread(nullptr),
-	  inputBuffer(0), ttlState(0)
+	  ttlState(0)
 {
 		dataThread = dt(this);
 
@@ -101,14 +101,27 @@ void SourceNode::getEventChannelNames(StringArray& names)
 
 void SourceNode::updateSettings()
 {
-    if (inputBuffer == 0 && dataThread != 0)
-    {
 
-        inputBuffer = dataThread->getBufferAddress();
-        std::cout << "Input buffer address is " << inputBuffer << std::endl;
+	inputBuffers.clear();
+
+    if (dataThread != 0)
+    {
+		for (int i = 0; i < dataThread->getNumSampleRates(); i++)
+		{
+			inputBuffers.add(dataThread->getBufferAddress(i));
+		}
+        
+        //std::cout << "Input buffer address is " << inputBuffer << std::endl;
     }
 
     dataThread->updateChannels();
+	
+	//for (int i = 0; i < channels.size(); i++)
+	//{
+	//	std::cout << i << " " << channels[i]->sampleRate << " " << channels[i]->subProcessorId << ":::";
+	//}
+
+	//std::cout << std::endl;
 
 }
 
@@ -338,77 +351,70 @@ void SourceNode::process(AudioSampleBuffer& buffer,
     events.clear();
     buffer.clear();
 
-    int nSamples = inputBuffer->readAllFromBuffer(buffer, &timestamp, eventCodeBuffer, buffer.getNumSamples());
+	int nSamples;
+	int startChan = 0;
 
-    setNumSamples(events, nSamples);
-    setTimestamp(events, timestamp);
+	for (int i = 0; i < inputBuffers.size(); i++)
+	{
+		nSamples = inputBuffers[i]->readAllFromBuffer(buffer, &timestamp, eventCodeBuffer, buffer.getNumSamples(), startChan);
 
-    //std::cout << *buffer.getReadPointer(0) << std::endl;
+		startChan += inputBuffers[i]->getNumChannels();
 
-    //std::cout << "Source node timestamp: " << timestamp << std::endl;
+		setNumSamples(events, nSamples, i);
+		setTimestamp(events, timestamp, i);
 
-    //std::cout << "Samples per buffer: " << nSamples << std::endl;
+		// fill event buffer
 
+		if (i == 0)
+		{
+			for (int i = 0; i < nSamples; i++)
+			{
+				for (int c = 0; c < numEventChannels; c++)
+				{
+					int state = eventCodeBuffer[i] & (1 << c);
 
+					if (eventChannelState[c] != state)
+					{
+						if (state == 0)
+						{
 
+							//std::cout << "OFF" << std::endl;
+							//std::cout << c << std::endl;
+							// signal channel state is OFF
+							addEvent(events, // MidiBuffer
+								TTL,    // eventType
+								i,      // sampleNum
+								0,	     // eventID
+								c,		 // eventChannel
+								8,
+								(uint8*)(&eventCodeBuffer[i])
+								);
+						}
+						else
+						{
 
-    // std::cout << (int) *(data + 7) << " " <<
-    //                 (int) *(data + 6) << " " <<
-    //                 (int) *(data + 5) << " " <<
-    //                 (int) *(data + 4) << " " <<
-    //                 (int) *(data + 3) << " " <<
-    //                 (int) *(data + 2) << " " <<
-    //                 (int) *(data + 1) << " " <<
-    //                 (int) *(data + 0) << std::endl;
+							// std::cout << "ON" << std::endl;
+							// std::cout << c << std::endl;
 
-
-    // fill event buffer
-    for (int i = 0; i < nSamples; i++)
-    {
-        for (int c = 0; c < numEventChannels; c++)
-        {
-            int state = eventCodeBuffer[i] & (1 << c);
-
-            if (eventChannelState[c] != state)
-            {
-                if (state == 0)
-                {
-
-                    //std::cout << "OFF" << std::endl;
-                    //std::cout << c << std::endl;
-                    // signal channel state is OFF
-                    addEvent(events, // MidiBuffer
-                             TTL,    // eventType
-                             i,      // sampleNum
-                             0,	     // eventID
-                             c,		 // eventChannel
-							 8,
-							 (uint8*)(&eventCodeBuffer[i])
-                            );
-                }
-                else
-                {
-
-                    // std::cout << "ON" << std::endl;
-                    // std::cout << c << std::endl;
-
-                    // signal channel state is ON
-                    addEvent(events, // MidiBuffer
-                             TTL,    // eventType
-                             i,      // sampleNum
-                             1,		 // eventID
-                             c,		 // eventChannel
-							 8,
-							 (uint8*)(&eventCodeBuffer[i])
-                            );
+							// signal channel state is ON
+							addEvent(events, // MidiBuffer
+								TTL,    // eventType
+								i,      // sampleNum
+								1,		 // eventID
+								c,		 // eventChannel
+								8,
+								(uint8*)(&eventCodeBuffer[i])
+								);
 
 
-                }
+						}
 
-                eventChannelState[c] = state;
-            }
-        }
-    }
+						eventChannelState[c] = state;
+					}
+				}
+			}
+		}
+	}
 
 }
 

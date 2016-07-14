@@ -60,8 +60,11 @@ public:
     /** Returns the number of samples currently available in the buffer.*/
     int getNumSamples();
 
+	/** Returns the number of channels currently available in the buffer.*/
+	int getNumChannels();
+
     /** Copies as many samples as possible from the DataBuffer to an AudioSampleBuffer.*/
-    int readAllFromBuffer(AudioSampleBuffer& data, uint64* ts, uint64* eventCodes, int maxSize);
+    int readAllFromBuffer(AudioSampleBuffer& data, uint64* ts, uint64* eventCodes, int maxSize, int startChan = 0);
 
     /** Resizes the data buffer */
     void resize(int chans, int size);

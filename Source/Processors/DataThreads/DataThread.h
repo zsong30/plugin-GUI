@@ -64,7 +64,7 @@ public:
     void run();
 
     /** Returns the address of the DataBuffer that the input source will fill.*/
-    DataBuffer* getBufferAddress();
+    DataBuffer* getBufferAddress(int i = 0);
 
     /** Fills the DataBuffer with incoming data. This is the most important
     method for each DataThread.*/
@@ -76,7 +76,11 @@ public:
     /** Experimental method used for testing data sources that can deliver outputs.*/
 	virtual void setOutputLow();
 
+	/** First data buffer. */
     ScopedPointer<DataBuffer> dataBuffer;
+	
+	/** Extra data buffers (if needed) */
+	OwnedArray<DataBuffer> extraDataBuffers;
 
     /** Returns true if the data source is connected, false otherwise.*/
     virtual bool foundInputSource() = 0;
@@ -100,7 +104,7 @@ public:
     virtual float getSampleRate() = 0;
 
 	/** Does the data source generate two sample rates? */
-	virtual bool isDualSampleRate();
+	virtual int getNumSampleRates();
 
     /** Returns the volts per bit of the data source.*/
     virtual float getBitVolts(Channel* chan) = 0;
@@ -124,7 +128,7 @@ public:
 	virtual bool usesCustomNames();
 
     /** Changes the names of channels, if the thread needs custom names. */
-    void updateChannels();
+    virtual void updateChannels();
 
     /** Returns a pointer to the data input device, in case other processors
     need to communicate with it.*/

@@ -34,6 +34,14 @@ DataThread::DataThread(SourceNode* s) : Thread("Data Thread"), dataBuffer(0)
     // do not generate their own timestamps can simply increment
     // this value
 
+	if (getNumSampleRates() > 1)
+	{
+		for (int i = 0; i < getNumSampleRates() - 1; i++)
+		{
+			extraDataBuffers.add(0);
+		}
+	}
+
 }
 
 DataThread::~DataThread()
@@ -61,12 +69,15 @@ void DataThread::run()
     }
 }
 
-DataBuffer* DataThread::getBufferAddress()
+DataBuffer* DataThread::getBufferAddress(int i)
 {
 
-    std::cout << "Setting buffer address to " << dataBuffer << std::endl;
+    //std::cout << "Setting buffer address to " << dataBuffer << std::endl;
 
-    return dataBuffer;
+	if (i == 0)
+		return dataBuffer;
+	else
+		return extraDataBuffers[i - 1];
 }
 
 void DataThread::getChannelInfo(Array<ChannelCustomInfo>& infoArray)
@@ -147,7 +158,7 @@ GenericEditor* DataThread::createEditor(SourceNode* )
 	return nullptr;
 }
 
-bool DataThread::isDualSampleRate()
+int DataThread::getNumSampleRates()
 {
-	return false;
+	return 1;
 }

@@ -41,6 +41,8 @@ struct HDF5RecordingInfo
     uint32 start_sample;
     float sample_rate;
     uint32 bit_depth;
+    int nodeId;
+    int subProcessorId;
     Array<float> bitVolts;
     Array<float> channelSampleRates;
     bool multiSample;
@@ -119,10 +121,10 @@ private:
 class KWDFile : public HDF5FileBase
 {
 public:
-    KWDFile(int processorNumber, String basename);
+    KWDFile(int processorNumber, int subProcessorId, String basename);
     KWDFile();
     virtual ~KWDFile();
-    void initFile(int processorNumber, String basename);
+    void initFile(int processorNumber, int subProcessorId, String basename);
     void startNewRecording(int recordingNumber, int nChannels, HDF5RecordingInfo* info);
     void stopRecording();
     void writeBlockData(int16* data, int nSamples);

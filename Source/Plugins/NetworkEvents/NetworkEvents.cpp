@@ -517,7 +517,7 @@ void NetworkEvents::process(AudioSampleBuffer& buffer,
 
     //std::cout << "NETWORK NODE" << std::endl;
     //printf("Entering NetworkEvents::process\n");
-    setTimestamp(events,CoreServices::getGlobalTimestamp());
+    setTimestamp(events, CoreServices::getGlobalTimestamp());
     checkForEvents(events);
     //simulateDesignAndTrials(events);
 

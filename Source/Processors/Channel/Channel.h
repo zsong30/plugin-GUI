@@ -116,6 +116,9 @@ public:
     /** The ID of the channel's processor.*/
     int nodeId;
 
+	/** The channel's sub-processor id (default = 0, maybe be higher if there are multiple sampling rates).*/
+	int subProcessorId;
+
     /** Pointer to the channel's parent processor. */
     GenericProcessor* processor;
 

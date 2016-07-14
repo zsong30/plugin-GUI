@@ -637,9 +637,9 @@ void HDF5RecordingData::getRowXPositions(Array<uint32>& rows)
 
 //KWD File
 
-KWDFile::KWDFile(int processorNumber, String basename) : HDF5FileBase()
+KWDFile::KWDFile(int processorNumber, int subProcessorNumber, String basename) : HDF5FileBase()
 {
-    initFile(processorNumber, basename);
+    initFile(processorNumber, subProcessorNumber, basename);
 }
 
 KWDFile::KWDFile() : HDF5FileBase()
@@ -653,10 +653,17 @@ String KWDFile::getFileName()
     return filename;
 }
 
-void KWDFile::initFile(int processorNumber, String basename)
+void KWDFile::initFile(int processorNumber, int subProcessorNumber, String basename)
 {
     if (isOpen()) return;
-    filename = basename + "_" + String(processorNumber) + ".raw.kwd";
+
+	//std::cout << "initializing file for processor " << processorNumber << "-" << subProcessorNumber << std::endl;
+
+	if (subProcessorNumber == 0)
+		filename = basename + "_" + String(processorNumber) + ".raw.kwd";
+	else
+		filename = basename + "_" + String(processorNumber) + "_" + String(subProcessorNumber) + ".raw.kwd";
+
     readyToOpen=true;
 }
 

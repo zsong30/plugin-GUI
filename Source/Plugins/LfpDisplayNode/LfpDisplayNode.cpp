@@ -70,7 +70,7 @@ void LfpDisplayNode::updateSettings()
             eventSourceNodes.add(eventChannels[i]->sourceNodeId);
 
         }
-    }\
+    }
 
     numEventChannels = eventSourceNodes.size();
 
@@ -162,13 +162,17 @@ void LfpDisplayNode::handleEvent(int eventType, MidiMessage& event, int sampleNu
 
         int eventSourceNodeId = *(dataptr+5);
 
-        int nSamples = numSamples.at(eventSourceNodeId);
+        int nSamples = numSamples.at(eventSourceNodeId * 10);
 
         int samplesToFill = nSamples - eventTime;
 
-        //	std::cout << "Received event from " << eventSourceNode << ", channel "
-        //	          << eventChannel << ", with ID " << eventId << ", copying to "
-         //            << channelForEventSource[eventSourceNode] << std::endl;
+		//if (eventChannel == 0)
+		//{
+		//	std::cout << "Received event from " << eventSourceNodeId << ", channel "
+		//		<< eventChannel << ", with ID " << eventId << ", copying to "
+		//		<< channelForEventSource[eventSourceNodeId] << std::endl;
+		//}
+		
         ////
         int bufferIndex = (displayBufferIndex[channelForEventSource[eventSourceNodeId]] + eventTime - nSamples) % displayBuffer->getNumSamples();
         
@@ -249,7 +253,7 @@ void LfpDisplayNode::initializeEventChannels()
 
         int samplesLeft = displayBuffer->getNumSamples() - index;
 
-        int nSamples = numSamples.at(eventSourceNodes[i]);
+        int nSamples = numSamples.at(eventSourceNodes[i]*10);
 
 
 

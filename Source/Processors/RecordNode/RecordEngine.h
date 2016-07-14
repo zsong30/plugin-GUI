@@ -52,7 +52,8 @@ struct SpikeRecordInfo
 
 struct RecordProcessorInfo
 {
-	int processorId; 
+	int processorId;
+	int subProcessorId;
 	Array<int> recordedChannels; //Indexes of the recorded channels. From 0-maxRecordChannels, not 0-totalChannels
 };
 

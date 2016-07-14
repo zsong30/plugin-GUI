@@ -206,7 +206,10 @@ public:
     GenericProcessor* destNode;
 
     /** Returns the sample rate for a processor (assumes the same rate for all channels).*/
-    virtual float getSampleRate();
+    virtual float getSampleRate(int subProcessorId = 0);
+
+	/** Returns the number of sample rates. */
+	virtual int getNumSampleRates();
 
     /** Returns the default sample rate, in case a processor has no source (or is itself a source).*/
     virtual float getDefaultSampleRate();
@@ -480,16 +483,16 @@ public:
     int getNumSamples(int channelNumber);
 
     /** Used to get the number of samples in a given buffer, for a given source node. */
-    void setNumSamples(MidiBuffer&, int numSamples);
+    void setNumSamples(MidiBuffer&, int numSamples, int subProcessorId = 0);
 
     /** Used to get the timestamp for a given buffer, for a given channel. */
     int64 getTimestamp(int channelNumber);
 
     /** Used to set the timestamp for a given buffer, for a given source node. */
-    void setTimestamp(MidiBuffer&, int64 timestamp);
+    void setTimestamp(MidiBuffer&, int64 timestamp, int subProcessorId = 0);
 
-    std::map<uint8, int> numSamples;
-    std::map<uint8, int64> timestamps;
+    std::map<int, int> numSamples;
+    std::map<int, int64> timestamps;
 
 private:
 
