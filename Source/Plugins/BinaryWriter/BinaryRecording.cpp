@@ -52,7 +52,7 @@ void BinaryRecording::openFiles(File rootFolder, int experimentNumber, int recor
 	for (int i = 0; i < nProcessors; i++)
 	{
 		const RecordProcessorInfo& pInfo = getProcessorInfo(i);
-		File datFile(basepath + "_" + String(pInfo.processorId) + "_" + String(recordingNumber) + ".dat");
+		File datFile(basepath + "_" + String(pInfo.processorId) + "-" + String(pInfo.subProcessorId) + "_" + String(recordingNumber) + ".dat");
 		ScopedPointer<SequentialBlockFile> bFile = new SequentialBlockFile(pInfo.recordedChannels.size(), samplesPerBlock);
 		if (bFile->openFile(datFile))
 			m_DataFiles.add(bFile.release());
@@ -216,9 +216,7 @@ void BinaryRecording::openMessageFile(String basepath, int recordNumber)
 	FILE* mFile;
 	String fullPath = basepath + "_messages_" + String(recordNumber) + ".events";
 
-	fullPath += "messages";
-
-
+	//fullPath += "messages";
 
 	std::cout << "OPENING FILE: " << fullPath << std::endl;
 

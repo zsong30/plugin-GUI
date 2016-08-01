@@ -320,7 +320,7 @@ void AudioNode::process(AudioSampleBuffer& buffer,
 
                     int remainingSamples = numSamplesExpected[i] - samplesToCopyFromOverflowBuffer;
 
-                    int samplesAvailable = numSamples.at(channelPointers[i]->sourceNodeId);
+                    int samplesAvailable = numSamples.at(channelPointers[i]->sourceNodeId*10 + channelPointers[i]->subProcessorId);
 
                     int samplesToCopyFromIncomingBuffer = ((remainingSamples <= samplesAvailable) ?
                                                            remainingSamples :

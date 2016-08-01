@@ -345,6 +345,7 @@ void RecordNode::setParameter(int parameterIndex, float newValue)
 			}
 		}
 
+
 		std::cout << "Num Recording Processors: " << procInfo.size() << std::endl;
 		int numRecordedChannels = channelMap.size();
 
@@ -492,6 +493,10 @@ void RecordNode::process(AudioSampleBuffer& buffer,
 			int subProcessorId = channelPointers[realChan]->subProcessorId;
 			int nSamples = numSamples.at(sourceNodeId*10 + subProcessorId);
 			int64 timestamp = timestamps.at(sourceNodeId*10 + subProcessorId);
+
+			//if (realChan == 0 || realChan == 500)
+			//	std::cout << realChan << ":" << nSamples << " ";
+
 			m_dataQueue->writeChannel(buffer, chan, realChan, nSamples, timestamp);
 		}
 
