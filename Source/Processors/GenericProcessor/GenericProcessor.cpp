@@ -633,6 +633,8 @@ void GenericProcessor::setTimestamp(MidiBuffer& events, int64 timestamp, int sub
     //since the processor generating the timestamp won't get the event, add it to the map
 	timestamps[nodeId*10 + subProcessorId] = timestamp;
 
+	//std::cout << "nodeId: " << nodeId << ", subPId: " << subProcessorId << ", ts = " << timestamp << std::endl;
+
     if (needsToSendTimestampMessage)
     {
 		String eventString = "Processor: " + String(getNodeId()) + " sub-processor: " + String(subProcessorId) + " start time: " + String(timestamp) + "@" + String(getSampleRate()) + "Hz";

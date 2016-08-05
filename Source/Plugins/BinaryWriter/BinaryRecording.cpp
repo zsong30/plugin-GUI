@@ -130,7 +130,10 @@ void BinaryRecording::writeData(int writeChannel, int realChannel, const float* 
 	FloatVectorOperations::copyWithMultiply(m_scaledBuffer.getData(), buffer, multFactor, size);
 	AudioDataConverters::convertFloatToInt16LE(m_scaledBuffer.getData(), m_intBuffer.getData(), size);
 
-	m_DataFiles[getProcessorFromChannel(writeChannel)]->writeChannel(getTimestamp(writeChannel)-m_startTS[writeChannel],getChannelNumInProc(writeChannel),m_intBuffer.getData(),size);
+	m_DataFiles[getProcessorFromChannel(writeChannel)]->writeChannel(getTimestamp(writeChannel)-m_startTS[writeChannel], // uint64 startPos
+																	 getChannelNumInProc(writeChannel),                  // int channel
+																	 m_intBuffer.getData(),								 // int16* data
+																	 size);												 // numSamples
 }
 
 //Code below is copied from OriginalRecording, so it's not as clean as newer one

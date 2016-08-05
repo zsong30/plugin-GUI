@@ -486,6 +486,7 @@ void RecordNode::process(AudioSampleBuffer& buffer,
     {
         // SECOND: write channel data
 		int recordChans = channelMap.size();
+
 		for (int chan = 0; chan < recordChans; ++chan)
 		{
 			int realChan = channelMap[chan];
@@ -495,7 +496,7 @@ void RecordNode::process(AudioSampleBuffer& buffer,
 			int64 timestamp = timestamps.at(sourceNodeId*10 + subProcessorId);
 
 			//if (realChan == 0 || realChan == 500)
-			//	std::cout << realChan << ":" << nSamples << " ";
+			//	std::cout << realChan << ": " << sourceNodeId << "/" << subProcessorId << " " << nSamples << " " << timestamp << std::endl;
 
 			m_dataQueue->writeChannel(buffer, chan, realChan, nSamples, timestamp);
 		}

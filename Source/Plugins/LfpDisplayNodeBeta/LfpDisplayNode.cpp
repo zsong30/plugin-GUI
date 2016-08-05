@@ -255,8 +255,6 @@ void LfpDisplayNode::initializeEventChannels()
 
         int nSamples = numSamples.at(eventSourceNodes[i]*10);
 
-
-
         if (nSamples < samplesLeft)
         {
 
