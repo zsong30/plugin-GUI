@@ -161,6 +161,7 @@ void LfpDisplayCanvas::beginAnimation()
     for (int i = 0; i < screenBufferIndex.size(); i++)
     {
         screenBufferIndex.set(i,0);
+		subSampleOffset.set(i, 0.0f);
     }
 
     startCallbacks();
@@ -182,6 +183,7 @@ void LfpDisplayCanvas::update()
     sampleRate.clear();
     screenBufferIndex.clear();
     lastScreenBufferIndex.clear();
+	subSampleOffset.clear();
     displayBufferIndex.clear();
 
     for (int i = 0; i <= nChans; i++) // extra channel for events
@@ -200,6 +202,7 @@ void LfpDisplayCanvas::update()
         displayBufferIndex.add(0);
         screenBufferIndex.add(0);
         lastScreenBufferIndex.add(0);
+		subSampleOffset.add(0);
     }
 
     if (nChans != lfpDisplay->getNumChannels())
@@ -264,6 +267,7 @@ void LfpDisplayCanvas::refreshState()
 
         displayBufferIndex.set(i, processor->getDisplayBufferIndex(i));
         screenBufferIndex.set(i,0);
+		subSampleOffset.set(i, 0.0f);
     }
 
 }
@@ -271,8 +275,12 @@ void LfpDisplayCanvas::refreshState()
 void LfpDisplayCanvas::refreshScreenBuffer()
 {
 
-    for (int i = 0; i < screenBufferIndex.size(); i++)
-        screenBufferIndex.set(i,0);
+	for (int i = 0; i < screenBufferIndex.size(); i++)
+	{
+		screenBufferIndex.set(i, 0);
+		subSampleOffset.set(i, 0.0f);
+	}
+        
 
     screenBuffer->clear();
     screenBufferMin->clear();
@@ -309,12 +317,13 @@ void LfpDisplayCanvas::updateScreenBuffer()
 
         int nSamples =  index - dbi; // number of new samples (not pixels) that have been added to the displayBuffer
 
-        if (nSamples < 0) // buffer has reset to 0 -- xxx 2do bug: this shouldnt happen because it makes the range/histogram display not work properly/look off for one pixel
+        if (nSamples < -1000) // buffer has reset to 0 -- xxx 2do bug: this shouldnt happen because it makes the range/histogram display not work properly/look off for one pixel
         {
             nSamples = (displayBufferSize - dbi) + index +1;
         }
 
-		float ratio; 
+		float ratio;
+		float newRatio;
 
 		ratio = sampleRate[channel] * timebase / float(maxSamples); // samples / pixel
 
@@ -330,9 +339,18 @@ void LfpDisplayCanvas::updateScreenBuffer()
 
 			valuesNeeded = screenBufferIndex[0] - sbi;
 
+			//ratio -= 1;
+
 			actualValuesNeeded = (int)(float(nSamples) / ratio); // N pixels needed for this update
 
-			difference = (actualValuesNeeded - valuesNeeded) * ratio;
+			newRatio = ratio;
+
+			//if (actualValuesNeeded != valuesNeeded)
+			//	newRatio = float(nSamples) / float(actualValuesNeeded);
+
+			difference = (actualValuesNeeded - valuesNeeded) * newRatio;
+
+			ratio = newRatio;
 
 			//if (difference < 0)
 			//	valuesNeeded = actualValuesNeeded;
@@ -351,14 +369,12 @@ void LfpDisplayCanvas::updateScreenBuffer()
 		//else
 		//	ratio = 0.0f;
 
-		if (channel == 0)
-			std::cout << "1" << " " << sbi << " " << dbi << " " << nSamples << " " << ratio << " " << valuesNeeded << " " << actualValuesNeeded << " 0" << std::endl;
+		//if (channel == 0)
+		//	std::cout << "1" << " sbi: " << sbi << " dbi: " << dbi << " new: " << nSamples << " r: " << ratio << " need: " << valuesNeeded << " act: " << actualValuesNeeded << " diff: 0" << std::endl;
 		//else if (channel == 1)
 		//	std::cout << "1" << " " << sbi << " " << dbi << " " << nSamples << " " << ratio << " " << valuesNeeded << std::endl;
-		else if (channel == 386)
-			std::cout << "3" << " " << sbi << " " << dbi << " " << nSamples << " " << ratio << " " << valuesNeeded << " " << actualValuesNeeded << " " << difference << std::endl << std::endl;
-
-        float subSampleOffset = 0.0;
+		//else if (channel == 386)
+		//	std::cout << "3" << " sbi: " << sbi << " dbi: " << dbi << " new: " << nSamples << " r: " << newRatio << " need: " << valuesNeeded << " act: " << actualValuesNeeded << " diff: " << difference << std::endl << std::endl;
 
         //dbi %= displayBufferSize; // make sure we're not overshooting
         int nextPos = (dbi + 1) % displayBufferSize; //  position next to displayBufferIndex in display buffer to copy from
@@ -381,7 +397,7 @@ void LfpDisplayCanvas::updateScreenBuffer()
                 if (!lfpDisplay->isPaused)
                 {
                     float gain = 1.0;
-                    float alpha = (float) subSampleOffset;
+                    float alpha = (float) subSampleOffset[channel];
                     float invAlpha = 1.0f - alpha;
 
                     screenBuffer->clear(channel, sbi, 1);
@@ -408,17 +424,20 @@ void LfpDisplayCanvas::updateScreenBuffer()
                     float sample_min   =  10000000;
                     float sample_max   = -10000000;
                     
-                    int nextpix = (dbi + int(ratio) + 1) % (displayBufferSize + 1); //  position to next pixels index
-                    
-                    if (nextpix <= dbi) { // at the end of the displaybuffer, this can occur and it causes the display to miss one pixel worth of sample - this circumvents that
+					float nextpix = float(dbi) + ratio + 1.0f;
+
+					if (nextpix > float(displayBufferSize))
+						nextpix -= float(displayBufferSize);
+
+                    if (nextpix <= float(dbi)) { // at the end of the displaybuffer, this can occur and it causes the display to miss one pixel worth of sample - this circumvents that
                     //    std::cout << "np " ;
-                        nextpix = dbi;
+						nextpix = float(dbi);
                     }
                    
-                    for (int j = dbi; j < nextpix; j++)
+                    for (float j = float(dbi); j < nextpix; j++)
                     {
                         
-                         float sample_current = displayBuffer->getSample(channel, j);
+                         float sample_current = displayBuffer->getSample(channel, int(j));
                         //sample_mean = sample_mean + sample_current;
 
                         if (sample_min > sample_current)
@@ -470,15 +489,15 @@ void LfpDisplayCanvas::updateScreenBuffer()
                   sbi++; // one for each value needed
                 }
             
-				subSampleOffset += ratio;
+				subSampleOffset.set(channel, subSampleOffset[channel] + ratio);
 
-				while (subSampleOffset >= 1.0)
+				while (subSampleOffset[channel] >= 1.0)
 				{
 					if (++dbi > displayBufferSize)
 						dbi = 0;
 
 					nextPos = (dbi + 1) % displayBufferSize;
-					subSampleOffset -= 1.0;
+					subSampleOffset.set(channel, subSampleOffset[channel] - 1.0f);
 				}
 
 			} // for (int i = 0; i < valuesNeeded; i++)
@@ -981,6 +1000,16 @@ LfpDisplayOptions::LfpDisplayOptions(LfpDisplayCanvas* canvas_, LfpTimescale* ti
     pauseButton->setToggleState(false, sendNotification);
     addAndMakeVisible(pauseButton);
 
+	//button for DC offset subtraction
+	dcOffsetButton = new UtilityButton("DC offset", Font("Small Text", 13, Font::plain));
+	dcOffsetButton->setRadius(5.0f);
+	dcOffsetButton->setEnabledState(true);
+	dcOffsetButton->setCorners(true, true, true, true);
+	dcOffsetButton->addListener(this);
+	dcOffsetButton->setClickingTogglesState(true);
+	dcOffsetButton->setToggleState(false, sendNotification);
+	addAndMakeVisible(dcOffsetButton);
+
     // add event display-specific controls (currently just an enable/disable button)
     for (int i = 0; i < 8; i++)
     {
@@ -1026,6 +1055,8 @@ void LfpDisplayOptions::resized()
     drawMethodButton->setBounds(35,getHeight()-150,100,22);
 
     pauseButton->setBounds(450,getHeight()-50,50,44);
+
+	dcOffsetButton->setBounds(535, getHeight() - 40, 90, 34);
 
     saturationWarningSelection->setBounds(250, getHeight()-90, 60, 25);
     
@@ -1177,6 +1208,12 @@ void LfpDisplayOptions::buttonClicked(Button* b)
         lfpDisplay->isPaused = b->getToggleState();
         return;
     }
+
+	if (b == dcOffsetButton)
+	{
+		lfpDisplay->toggleDcOffset(b->getToggleState());
+		return;
+	}
 
     if (b == showHideOptionsButton)
     {
@@ -2099,6 +2136,14 @@ void LfpDisplay::mouseWheelMove(const MouseEvent&  e, const MouseWheelDetails&  
 
 }
 
+void LfpDisplay::toggleDcOffset(bool offsetSubtracted)
+{
+	for (int i = 0; i < channels.size(); i++)
+	{
+		channels[i]->subtractDcOffset = offsetSubtracted;
+	}
+}
+
 void LfpDisplay::toggleSingleChannel(int chan)
 {
     std::cout << "Toggle channel " << chan << std::endl;
@@ -2255,7 +2300,7 @@ bool LfpDisplay::getEnabledState(int chan)
 LfpChannelDisplay::LfpChannelDisplay(LfpDisplayCanvas* c, LfpDisplay* d, LfpDisplayOptions* o, int channelNumber) :
     canvas(c), display(d), options(o), isSelected(false), chan(channelNumber),
     channelOverlap(300), channelHeight(40), range(1000.0f),
-    isEnabled(true), inputInverted(false), canBeInverted(true), drawMethod(false)
+	isEnabled(true), inputInverted(false), canBeInverted(true), drawMethod(false), subtractDcOffset(false), mean(0.0f)
 {
 
 
@@ -2308,6 +2353,12 @@ void LfpChannelDisplay::pxPaint()
 {
     if (isEnabled)
     {
+
+		if (subtractDcOffset)
+			mean = canvas->getMean(chan);
+		else
+			mean = 0.0f;
+
         Image::BitmapData bdLfpChannelBitmap(display->lfpChannelBitmap, 0,0, display->lfpChannelBitmap.getWidth(), display->lfpChannelBitmap.getHeight());
 
         int center = getHeight()/2;
@@ -2418,11 +2469,10 @@ void LfpChannelDisplay::pxPaint()
                 
                 
                 // set max-min range for plotting, used in all methods
-                double a = (canvas->getYCoordMax(chan, i)/range*channelHeightFloat);
-                double b = (canvas->getYCoordMin(chan, i)/range*channelHeightFloat);
-                
-                double a_raw = canvas->getYCoordMax(chan, i);
-                double b_raw = canvas->getYCoordMin(chan, i);
+                double a = ((canvas->getYCoordMax(chan, i) - mean)/range*channelHeightFloat);
+				double b = ((canvas->getYCoordMin(chan, i) - mean) / range*channelHeightFloat);
+                double a_raw = canvas->getYCoordMax(chan, i) - mean;
+                double b_raw = canvas->getYCoordMin(chan, i) - mean;
                 double from_raw=0; double to_raw=0;
                 
                 //double m = (canvas->getYCoordMean(chan, i)/range*channelHeightFloat)+getHeight()/2;

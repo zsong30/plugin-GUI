@@ -104,6 +104,7 @@ public:
 
     Array<int> screenBufferIndex;
     Array<int> lastScreenBufferIndex;
+	Array<float> subSampleOffset;
 
     void saveVisualizerParameters(XmlElement* xml);
     void loadVisualizerParameters(XmlElement* xml);
@@ -268,9 +269,9 @@ private:
     ScopedPointer<UtilityButton> invertInputButton;
     ScopedPointer<UtilityButton> drawMethodButton;
     ScopedPointer<UtilityButton> pauseButton;
+	ScopedPointer<UtilityButton> dcOffsetButton;
     OwnedArray<UtilityButton> typeButtons;
-    
-    
+   
     ScopedPointer<Slider> brightnessSliderA;
     ScopedPointer<Slider> brightnessSliderB;
     
@@ -382,6 +383,7 @@ public:
     bool eventDisplayEnabled[8];
     bool isPaused; // simple pause function, skips screen bufer updates
     void toggleSingleChannel(int chan = -2);
+	void toggleDcOffset(bool);
 
     LfpDisplayOptions* options;
 
@@ -456,6 +458,7 @@ public:
     void updateType();
 
     bool fullredraw; // used to indicate that a full redraw is required. is set false after each full redraw
+	bool subtractDcOffset;
 
 protected:
 
@@ -479,6 +482,7 @@ protected:
     float channelHeightFloat;
 
     float range;
+	double mean;
 
     bool isEnabled;
     bool inputInverted;
@@ -488,7 +492,7 @@ protected:
     ChannelType type;
     String typeStr;
     
-    
+	
 
 };
 
