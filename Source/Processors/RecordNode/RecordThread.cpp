@@ -73,11 +73,14 @@ void RecordThread::setFirstBlockFlag(bool state)
 
 void RecordThread::run()
 {
+	std::cout << "RECORD THREAD STARTED" << std::endl;
+
 	const AudioSampleBuffer& dataBuffer = m_dataQueue->getAudioBufferReference();
 	bool closeEarly = true;
 	//1-Wait until the first block has arrived, so we can align the timestamps
 	while (!m_receivedFirstBlock && !threadShouldExit())
 	{
+		//std::cout << "Waiting for first block." << std::endl;
 		wait(100);
 	}
 
@@ -92,8 +95,16 @@ void RecordThread::run()
 		EVERY_ENGINE->openFiles(m_rootFolder, m_experimentNumber, m_recordingNumber);
 	}
 	//3-Normal loop
+	int counter = 0;
 	while (!threadShouldExit())
 	{
+		//counter++;
+		////if (counter > 1000)
+		//{
+			//std::cout << "Looping..." << std::endl;
+		//	counter = 0;
+		//}
+		
 		writeData(dataBuffer, BLOCK_MAX_WRITE_SAMPLES, BLOCK_MAX_WRITE_EVENTS, BLOCK_MAX_WRITE_SPIKES);
 	}
 	std::cout << "Exiting record thread" << std::endl;
@@ -112,11 +123,18 @@ void RecordThread::run()
 
 void RecordThread::writeData(const AudioSampleBuffer& dataBuffer, int maxSamples, int maxEvents, int maxSpikes, bool lastBlock)
 {
+	//std::cout << "writing data." << std::endl;
+
 	Array<int64> timestamps;
 	Array<CircularBufferIndexes> idx;
-	m_dataQueue->startRead(idx, timestamps, maxSamples);
+	if (!m_dataQueue->startRead(idx, timestamps, maxSamples))
+	{
+		std::cout << "Could not read data." << std::endl;
+	}
+	
 	EVERY_ENGINE->updateTimestamps(timestamps);
 	EVERY_ENGINE->startChannelBlock(lastBlock);
+	
 	for (int chan = 0; chan < m_numChannels; ++chan)
 	{
 		if (idx[chan].size1 > 0)
@@ -130,21 +148,26 @@ void RecordThread::writeData(const AudioSampleBuffer& dataBuffer, int maxSamples
 			}
 		}
 	}
+
 	m_dataQueue->stopRead();
 	EVERY_ENGINE->endChannelBlock(lastBlock);
 
-	std::vector<EventMessagePtr> events;
-	int nEvents = m_eventQueue->getEvents(events, maxEvents);
-	for (int ev = 0; ev < nEvents; ++ev)
+	if (true)
 	{
-		EVERY_ENGINE->writeEvent(events[ev]->getExtra(), events[ev]->getData(), events[ev]->getTimestamp());
-	}
 
-	std::vector<SpikeMessagePtr> spikes;
-	int nSpikes = m_spikeQueue->getEvents(spikes, maxSpikes);
-	for (int sp = 0; sp < nSpikes; ++sp)
-	{
-		EVERY_ENGINE->writeSpike(spikes[sp]->getExtra(), spikes[sp]->getData(), spikes[sp]->getTimestamp());
+		std::vector<EventMessagePtr> events;
+		int nEvents = m_eventQueue->getEvents(events, maxEvents);
+		for (int ev = 0; ev < nEvents; ++ev)
+		{
+			EVERY_ENGINE->writeEvent(events[ev]->getExtra(), events[ev]->getData(), events[ev]->getTimestamp());
+		}
+
+		std::vector<SpikeMessagePtr> spikes;
+		int nSpikes = m_spikeQueue->getEvents(spikes, maxSpikes);
+		for (int sp = 0; sp < nSpikes; ++sp)
+		{
+			EVERY_ENGINE->writeSpike(spikes[sp]->getExtra(), spikes[sp]->getData(), spikes[sp]->getTimestamp());
+		}
 	}
 }
 

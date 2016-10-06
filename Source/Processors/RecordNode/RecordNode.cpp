@@ -59,6 +59,7 @@ RecordNode::RecordNode()
     // 128 inputs, 0 outputs
     setPlayConfigDetails(getNumInputs(),getNumOutputs(),44100.0,128);
 	m_recordThread = new RecordThread(engineArray);
+	std::cout << "Creating data queue of size " << WRITE_BLOCK_LENGTH << " x " << DATA_BUFFER_NBLOCKS << std::endl;
 	m_dataQueue = new DataQueue(WRITE_BLOCK_LENGTH, DATA_BUFFER_NBLOCKS);
 	m_eventQueue = new EventMsgQueue(EVENT_BUFFER_NEVENTS);
 	m_spikeQueue = new SpikeMsgQueue(SPIKE_BUFFER_NSPIKES);

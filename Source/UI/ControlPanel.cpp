@@ -547,6 +547,9 @@ void ControlPanel::updateRecordEngineList()
 		recordSelector->setSelectedId(1, sendNotification);
 	else
 		recordSelector->setSelectedId(selectedEngine, sendNotification);
+
+	recordSelector->setSelectedId(2, sendNotification);// make binary the default
+
 }
 
 String ControlPanel::getSelectedRecordEngineId()

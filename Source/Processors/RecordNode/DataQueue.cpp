@@ -111,6 +111,11 @@ void DataQueue::fillTimestamps(int channel, int index, int size, int64 timestamp
 
 void DataQueue::writeChannel(const AudioSampleBuffer& buffer, int channel, int sourceChannel, int nSamples, int64 timestamp)
 {
+	//if (channel == 0)
+	//{
+	//	std::cout << "copying " << nSamples << "samples from channel 0" << std::endl;
+	//}
+
 	int index1, size1, index2, size2;
 	m_fifos[channel]->prepareToWrite(nSamples, index1, size1, index2, size2);
 	if ((size1 + size2) < nSamples)
@@ -156,7 +161,10 @@ bool DataQueue::startRead(Array<CircularBufferIndexes>& indexes, Array<int64>& t
 {
 	//This should never happen, but it never hurts to be on the safe side.
 	if (m_readInProgress)
+	{
+	    std::cout << "Read in progress" << std::endl;
 		return false;
+	}
 
 	m_readInProgress = true;
 	indexes.clear(); //Just in case it's not empty already
@@ -171,6 +179,11 @@ bool DataQueue::startRead(Array<CircularBufferIndexes>& indexes, Array<int64>& t
 		m_fifos[chan]->prepareToRead(samplesToRead, idx.index1, idx.size1, idx.index2, idx.size2);
 		indexes.add(idx);
 		m_readSamples.set(chan, idx.size1 + idx.size2);
+
+		//if (chan == 0)
+		//{
+		//	std::cout << "reading " << samplesToRead << "samples from channel 0" << std::endl;
+		//}
 		
 		int blockMod = idx.index1 % m_blockSize;
 		int blockDiff = (blockMod == 0) ? 0 : (m_blockSize - blockMod);

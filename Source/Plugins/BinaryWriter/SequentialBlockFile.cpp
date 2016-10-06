@@ -58,16 +58,27 @@ bool SequentialBlockFile::writeChannel(uint64 startPos, int channel, int16* data
 {
 	if (!m_file)
 		return false;
+
+	//if (channel == 0)
+	//	std::cout << "P1 ";
 	
 	int bIndex = m_memBlocks.size() - 1;
+
 	if ((bIndex < 0) || (m_memBlocks[bIndex]->getOffset() + m_samplesPerBlock) < (startPos + nSamples))
-		allocateBlocks(startPos, nSamples);
+		allocateBlocks(startPos, nSamples, channel);
+
+	//if (channel == 0)
+	//	std::cout << "P2 ";
 
 	for (bIndex = m_memBlocks.size() - 1; bIndex >= 0; bIndex--)
 	{
 		if (m_memBlocks[bIndex]->getOffset() <= startPos)
 			break;
 	}
+
+	//if (channel == 0)
+	//	std::cout << "P3 ";
+
 	if (bIndex < 0)
 	{
 		std::cerr << "BINARY WRITER: Memory block unloaded ahead of time for chan " << channel << " start " << startPos << " ns " << nSamples << " first " << m_memBlocks[0]->getOffset() <<std::endl;
@@ -79,10 +90,26 @@ bool SequentialBlockFile::writeChannel(uint64 startPos, int channel, int16* data
 	int startIdx = startPos - m_memBlocks[bIndex]->getOffset();
 	int startMemPos = startIdx*m_nChannels;
 	int dataIdx = 0;
+	int counter = 0;
+
+	//if (channel == 0)
+	//	std::cout << "P4." << std::endl;
+
 	while (writtenSamples < nSamples)
 	{
+		//if (channel == 0)
+		//	std::cout << "get data pointer." << std::endl;
 		int16* blockPtr = m_memBlocks[bIndex]->getData();
 		int samplesToWrite = jmin((nSamples - writtenSamples), (m_samplesPerBlock - startIdx));
+		
+		//counter++;
+		//if (channel == 0 && counter > 0)
+		//{
+		//	std::cout << samplesToWrite << std::endl;
+		//	counter = 0;
+		//}
+			
+		
 		for (int i = 0; i < samplesToWrite; i++)
 		{
 			*(blockPtr + startMemPos + channel + i*m_nChannels) = *(data + dataIdx);
@@ -93,12 +120,18 @@ bool SequentialBlockFile::writeChannel(uint64 startPos, int channel, int16* data
 		startMemPos = 0;
 		bIndex++;
 	}
+
+	
+
 	m_currentBlock.set(channel, bIndex - 1); //store the last block a channel was written in
 	return true;
 }
 
-void SequentialBlockFile::allocateBlocks(uint64 startIndex, int numSamples)
+void SequentialBlockFile::allocateBlocks(uint64 startIndex, int numSamples, int channel)
 {
+
+	//if (channel == 0)
+	//	std::cout << "Q1 ";
 	//First deallocate full blocks
 	//Search for the earliest unused block;
 	unsigned int minBlock = 0xFFFFFFFF; //large number;
@@ -107,29 +140,44 @@ void SequentialBlockFile::allocateBlocks(uint64 startIndex, int numSamples)
 		if (m_currentBlock[i] < minBlock)
 			minBlock = m_currentBlock[i];
 	}
+	//if (channel == 0)
+	//	std::cout << "Q2 ";
 
 	//Update block indexes
 	for (int i = 0; i < m_nChannels; i++)
 	{
 		m_currentBlock.set(i, m_currentBlock[i] - minBlock);
 	}
+	
+	//if (channel == 0)
+	//	std::cout << "Q3 ";
 
-	for (int i = 0; i < minBlock; i++)
-	{
+	m_memBlocks.removeRange(0, minBlock);
+
+	//for (int i = 0; i < minBlock; i++)
+	//{
 		//Not the most efficient way, as it has to move back all the elements, but it's a simple array of pointers, so it's quick enough
-		m_memBlocks.remove(0);
-	}
+		//m_memBlocks.remove(0);
+	//}
+
+	//if (channel == 0)
+	//	std::cout << "Q4 ";
 	//Look for the last available position and calculate needed space
 	uint64 lastOffset = m_memBlocks.getLast()->getOffset();
 	uint64 maxAddr = lastOffset + m_samplesPerBlock - 1;
 	uint64 newSpaceNeeded = numSamples - (maxAddr - startIndex);
 	int newBlocks = (newSpaceNeeded + m_samplesPerBlock - 1) / m_samplesPerBlock; //Fast ceiling division
 
+	//if (channel == 0)
+	//	std::cout << "Q5 ";
 	for (int i = 0; i < newBlocks; i++)
 	{
 		lastOffset += m_samplesPerBlock;
 		m_memBlocks.add(new FileBlock(m_file, m_blockSize, lastOffset));
 	}
+
+	//if (channel == 0)
+	//	std::cout << "Q6 ";
 
 }
 
