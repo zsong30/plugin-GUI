@@ -156,10 +156,16 @@ void LfpDisplayEditor::setCanvasDrawableSubprocessor(int index)
 {
     if (canvas)
     {
-        if (index >= 0)
-            ((LfpDisplayCanvas *)canvas.get())->setDrawableSubprocessor(*(inputSubprocessorIndices.begin() + index));
-        else
-            ((LfpDisplayCanvas *)canvas.get())->setDrawableSubprocessor(-1);
+		if (index >= 0)
+		{
+			((LfpDisplayCanvas *)canvas.get())->setDrawableSubprocessor(*(inputSubprocessorIndices.begin() + index));
+			//lfpProcessor->setSubprocessorAndSampleRate(int sp, float sr)
+		}
+		else
+		{
+			((LfpDisplayCanvas *)canvas.get())->setDrawableSubprocessor(-1);
+		}
+            
     }
 }
 

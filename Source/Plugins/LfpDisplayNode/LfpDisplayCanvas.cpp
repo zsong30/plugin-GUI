@@ -186,7 +186,7 @@ void LfpDisplayCanvas::beginAnimation()
 {
 	std::cout << "Beginning animation." << std::endl;
 
-	if (false)
+	if (true)
 	{
 
 		displayBufferSize = displayBuffer->getNumSamples();
@@ -202,7 +202,7 @@ void LfpDisplayCanvas::beginAnimation()
 
 void LfpDisplayCanvas::endAnimation()
 {
-	if (false)
+	if (true)
 	{
 		std::cout << "Ending animation." << std::endl;
 
@@ -212,7 +212,7 @@ void LfpDisplayCanvas::endAnimation()
 
 void LfpDisplayCanvas::update()
 {
-	if (false)
+	if (true)
 	{
 
 	
@@ -320,7 +320,7 @@ void LfpDisplayCanvas::refreshState()
 {
     // called when the component's tab becomes visible again
 
-	if (false)
+	if (true)
 	{
 		for (int i = 0; i <= displayBufferIndex.size(); i++) // include event channel
 		{
@@ -334,7 +334,7 @@ void LfpDisplayCanvas::refreshState()
 
 void LfpDisplayCanvas::refreshScreenBuffer()
 {
-	if (false)
+	if (true)
 	{
 		for (int i = 0; i < screenBufferIndex.size(); i++)
 			screenBufferIndex.set(i, 0);
@@ -349,7 +349,7 @@ void LfpDisplayCanvas::refreshScreenBuffer()
 
 void LfpDisplayCanvas::updateScreenBuffer()
 {
-	if (false)
+	if (true)
 	{
 		// copy new samples from the displayBuffer into the screenBuffer
 		int maxSamples = lfpDisplay->getWidth() - leftmargin;
@@ -689,7 +689,7 @@ void LfpDisplayCanvas::paint(Graphics& g)
 
 void LfpDisplayCanvas::refresh()
 {
-	if (false)
+	if (true)
 	{ 
     updateScreenBuffer();
 
@@ -2406,7 +2406,7 @@ void LfpDisplay::paint(Graphics& g)
 
 void LfpDisplay::refresh()
 {
-	if (false)
+	if (true)
 	{ 
     // X-bounds of this update
     int fillfrom = canvas->lastScreenBufferIndex[0];
