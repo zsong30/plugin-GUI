@@ -115,34 +115,43 @@ bool LfpDisplayNode::resizeBuffer()
     int nSamples = (int) getSampleRate() * bufferLength;
     int nInputs = getNumInputs();
 
-    std::cout << "Resizing buffer. Samples: " << nSamples << ", Inputs: " << nInputs << std::endl;
+	if (false)
+	{
+		std::cout << "Resizing buffer. Samples: " << nSamples << ", Inputs: " << nInputs << std::endl;
 
-    if (nSamples > 0 && nInputs > 0)
-    {
-        abstractFifo.setTotalSize (nSamples);
-        displayBuffer->setSize (nInputs + numEventChannels, nSamples); // add extra channels for TTLs
+		if (nSamples > 0 && nInputs > 0)
+		{
+			abstractFifo.setTotalSize(nSamples);
+			displayBuffer->setSize(nInputs + numEventChannels, nSamples); // add extra channels for TTLs
 
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	return true;
+    
 }
 
 
 bool LfpDisplayNode::enable()
 {
-    if (resizeBuffer())
-    {
-        LfpDisplayEditor* editor = (LfpDisplayEditor*) getEditor();
-        editor->enable();
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+	if (false)
+	{
+		if (resizeBuffer())
+		{
+			LfpDisplayEditor* editor = (LfpDisplayEditor*)getEditor();
+			editor->enable();
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	return true;
 }
 
 
@@ -296,49 +305,52 @@ void LfpDisplayNode::process (AudioSampleBuffer& buffer)
     // 1. place any new samples into the displayBuffer
     //std::cout << "Display node sample count: " << nSamples << std::endl; ///buffer.getNumSamples() << std::endl;
 
-    ScopedLock displayLock (displayMutex);
-    
-    initializeEventChannels();
-    checkForEvents (); // see if we got any TTL events
-    finalizeEventChannels();
+	if (false)
+	{
+		ScopedLock displayLock(displayMutex);
+
+		initializeEventChannels();
+		checkForEvents(); // see if we got any TTL events
+		finalizeEventChannels();
 
 
-    for (int chan = 0; chan < buffer.getNumChannels(); ++chan)
-    {
-        const int samplesLeft  = displayBuffer->getNumSamples() - displayBufferIndex[chan];
-        const int nSamples     = getNumSamples (chan);
+		for (int chan = 0; chan < buffer.getNumChannels(); ++chan)
+		{
+			const int samplesLeft = displayBuffer->getNumSamples() - displayBufferIndex[chan];
+			const int nSamples = getNumSamples(chan);
 
-        if (nSamples < samplesLeft)
-        {
-            displayBuffer->copyFrom (chan,                      // destChannel
-                                     displayBufferIndex[chan],  // destStartSample
-                                     buffer,                    // source
-                                     chan,                      // source channel
-                                     0,                         // source start sample
-                                     nSamples);                 // numSamples
+			if (nSamples < samplesLeft)
+			{
+				displayBuffer->copyFrom(chan,                      // destChannel
+					displayBufferIndex[chan],  // destStartSample
+					buffer,                    // source
+					chan,                      // source channel
+					0,                         // source start sample
+					nSamples);                 // numSamples
 
-            displayBufferIndex.set (chan, displayBufferIndex[chan] + nSamples);
-        }
-        else
-        {
-            const int extraSamples = nSamples - samplesLeft;
+				displayBufferIndex.set(chan, displayBufferIndex[chan] + nSamples);
+			}
+			else
+			{
+				const int extraSamples = nSamples - samplesLeft;
 
-            displayBuffer->copyFrom (chan,                      // destChannel
-                                     displayBufferIndex[chan],  // destStartSample
-                                     buffer,                    // source
-                                     chan,                      // source channel
-                                     0,                         // source start sample
-                                     samplesLeft);              // numSamples
+				displayBuffer->copyFrom(chan,                      // destChannel
+					displayBufferIndex[chan],  // destStartSample
+					buffer,                    // source
+					chan,                      // source channel
+					0,                         // source start sample
+					samplesLeft);              // numSamples
 
-            displayBuffer->copyFrom (chan,                      // destChannel
-                                     0,                         // destStartSample
-                                     buffer,                    // source
-                                     chan,                      // source channel
-                                     samplesLeft,               // source start sample
-                                     extraSamples);             // numSamples
+				displayBuffer->copyFrom(chan,                      // destChannel
+					0,                         // destStartSample
+					buffer,                    // source
+					chan,                      // source channel
+					samplesLeft,               // source start sample
+					extraSamples);             // numSamples
 
-            displayBufferIndex.set (chan, extraSamples);
-        }
-    }
+				displayBufferIndex.set(chan, extraSamples);
+			}
+		}
+	}
 }
 
