@@ -103,14 +103,14 @@ void LfpDisplayNode::updateSettings()
 
     for (int i = 0; i < eventSourceNodes.size(); ++i)
     {
-        std::cout << "Adding channel " << getNumInputs() + i << " for event source node " << eventSourceNodes[i] << std::endl;
+		std::cout << "Adding channel " << numChannelsInSubprocessor + i << " for event source node " << eventSourceNodes[i] << std::endl;
 
-        channelForEventSource[eventSourceNodes[i]] = getNumInputs() + i;
+		channelForEventSource[eventSourceNodes[i]] = numChannelsInSubprocessor + i;
         ttlState[eventSourceNodes[i]] = 0;
     }
 
     displayBufferIndex.clear();
-    displayBufferIndex.insertMultiple (0, 0, getNumInputs() + numEventChannels);
+	displayBufferIndex.insertMultiple(0, 0, numChannelsInSubprocessor + numEventChannels);
     
     // update the editor's subprocessor selection display
     LfpDisplayEditor * ed = (LfpDisplayEditor*)getEditor();
@@ -131,15 +131,14 @@ uint32 LfpDisplayNode::getChannelSourceID(const EventChannel* event) const
 
 void LfpDisplayNode::setSubprocessor(int sp)
 {
-	/*subprocessorToDraw = sp;
-	subprocessorSampleRate = sr;
-	numChannelsInSubprocessor = 0;
-	
-	
 
-	updateSettings();*/
 	subprocessorToDraw = sp;
 	
+}
+
+int LfpDisplayNode::getNumSubprocessorChannels()
+{
+	return numChannelsInSubprocessor;
 }
 
 bool LfpDisplayNode::resizeBuffer()
@@ -216,6 +215,8 @@ void LfpDisplayNode::handleEvent(const EventChannel* eventInfo, const MidiMessag
         const int eventTime = samplePosition;
         const uint32 eventSourceNodeId = getChannelSourceID(eventInfo);
         
+		//std::cout << "Received event on channel " << eventChannel << std::endl;
+		//std::cout << "Copying to channel " << channelForEventSource[eventSourceNodeId] << std::endl;
         
         const int chan          = channelForEventSource[eventSourceNodeId];
         const int index         = (displayBufferIndex[chan] + eventTime) % displayBuffer->getNumSamples();
@@ -266,12 +267,17 @@ void LfpDisplayNode::handleEvent(const EventChannel* eventInfo, const MidiMessag
 
 void LfpDisplayNode::initializeEventChannels()
 {
+
+	//std::cout << "Initializing events..." << std::endl;
+
     for (int i = 0; i < eventSourceNodes.size(); ++i)
     {
         const int chan          = channelForEventSource[eventSourceNodes[i]];
         const int index         = displayBufferIndex[chan];
         const int samplesLeft   = displayBuffer->getNumSamples() - index;
 		const int nSamples = getNumSourceSamples(eventSourceNodes[i]);
+
+		//std::cout << chan << " " << index << " " << samplesLeft << " " << nSamples << std::endl;
         
         if (nSamples < samplesLeft)
         {
@@ -335,7 +341,7 @@ void LfpDisplayNode::process (AudioSampleBuffer& buffer)
 	{
 		ScopedLock displayLock(displayMutex);
 
-		if (false)
+		if (true)
 		{
 			initializeEventChannels();
 			checkForEvents(); // see if we got any TTL events

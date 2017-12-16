@@ -68,6 +68,7 @@ public:
     CriticalSection* getMutex() { return &displayMutex; }
 
 	void setSubprocessor(int sp);
+	int getNumSubprocessorChannels();
 
 private:
     void initializeEventChannels();

@@ -36,7 +36,7 @@ LfpDisplayCanvas::LfpDisplayCanvas(LfpDisplayNode* processor_) :
     processor(processor_)
 {
 
-    nChans = processor->getNumInputs();
+	nChans = processor->getNumSubprocessorChannels();
     std::cout << "Setting num inputs on LfpDisplayCanvas to " << nChans << std::endl;
 
     displayBuffer = processor->getDisplayBufferAddress();
@@ -216,7 +216,7 @@ void LfpDisplayCanvas::update()
 	{
 
 	
-    nChans = jmax(processor->getNumInputs(), 0);
+    nChans = jmax(processor->getNumSubprocessorChannels(), 0);
 
     resizeSamplesPerPixelBuffer(nChans);
 
@@ -267,7 +267,7 @@ void LfpDisplayCanvas::update()
         lfpDisplay->setNumChannels(nChans); // add an extra channel for events
 
         // update channel names
-        for (int i = 0; i < processor->getNumInputs(); i++)
+		for (int i = 0; i < nChans; i++)
         {
 
             String chName = processor->getDataChannel(i)->getName();
@@ -287,7 +287,7 @@ void LfpDisplayCanvas::update()
     }
     else
     {
-        for (int i = 0; i < processor->getNumInputs(); i++)
+		for (int i = 0; i < nChans; i++)
         {
             lfpDisplay->channels[i]->updateType();
             lfpDisplay->channelInfo[i]->updateType();
@@ -366,6 +366,8 @@ void LfpDisplayCanvas::updateScreenBuffer()
 			int sbi = screenBufferIndex[channel];
 			int dbi = displayBufferIndex[channel];
 
+			
+
 			lastScreenBufferIndex.set(channel, sbi);
 
 			int index = processor->getDisplayBufferIndex(channel);
@@ -440,6 +442,7 @@ void LfpDisplayCanvas::updateScreenBuffer()
 								1, // numSamples
 								alpha*gain); // gain
 						}
+						
 
 						// same thing again, but this time add the min,mean, and max of all samples in current pixel
 						float sample_min = 10000000;
@@ -474,7 +477,11 @@ void LfpDisplayCanvas::updateScreenBuffer()
 						// update event channel
 						if (channel == nChans)
 						{
+							//std::cout << sample_max << std::endl;
 							screenBuffer->setSample(channel, sbi, sample_max);
+							//if (screenBuffer->getSample(channel, sbi - 1) != sample_max)
+							//	std::cout << "Sample changed" << std::endl;
+							//screenBuffer->setSample(channel, sbi, sample_max);
 						}
 
 						// similarly, for each pixel on the screen, we want a list of all values so we can draw a histogram later
@@ -1159,7 +1166,7 @@ LfpDisplayOptions::LfpDisplayOptions(LfpDisplayCanvas* canvas_, LfpTimescale* ti
         addAndMakeVisible(eventOptions);
         eventOptions->setBounds(500+(floor(i/2)*20), getHeight()-20-(i%2)*20, 40, 20);
 
-        lfpDisplay->setEventDisplayState(i,true);
+        lfpDisplay->setEventDisplayState(i,false);
 
     }
 
