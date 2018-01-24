@@ -99,6 +99,7 @@ private:
 	float subprocessorSampleRate;
 
     CriticalSection displayMutex;
+	bool updateSubprocessorsFlag;
 
 	uint32 getChannelSourceID(const EventChannel* event) const;
 

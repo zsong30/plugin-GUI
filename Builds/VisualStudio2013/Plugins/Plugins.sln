@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.40629.0
+# Visual Studio Express 2013 for Windows Desktop
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KWIKFormat", "KWIKFormat\KWIKFormat.vcxproj", "{554C8744-32CD-427C-A9E5-BF9A44440CED}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -54,6 +54,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EvntTrigAvg", "EvntTrigAvg\EvntTrigAvg.vcxproj", "{BEE7D50B-D914-43EC-975C-3FE2FC36E40D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LFP_Viewer", "LFP_Viewer\LFP_Viewer.vcxproj", "{41BD734E-4939-47AD-9714-9629538F7206}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProbeViewer", "ProbeViewer\ProbeViewer.vcxproj", "{CF601F1D-FB23-498D-8529-D51FD455A14A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -305,6 +307,17 @@ Global
 		{41BD734E-4939-47AD-9714-9629538F7206}.Release|Win32.Build.0 = Release|Win32
 		{41BD734E-4939-47AD-9714-9629538F7206}.Release|x64.ActiveCfg = Release|x64
 		{41BD734E-4939-47AD-9714-9629538F7206}.Release|x64.Build.0 = Release|x64
+		{CF601F1D-FB23-498D-8529-D51FD455A14A}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{CF601F1D-FB23-498D-8529-D51FD455A14A}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{CF601F1D-FB23-498D-8529-D51FD455A14A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CF601F1D-FB23-498D-8529-D51FD455A14A}.Debug|Win32.Build.0 = Debug|Win32
+		{CF601F1D-FB23-498D-8529-D51FD455A14A}.Debug|x64.ActiveCfg = Debug|x64
+		{CF601F1D-FB23-498D-8529-D51FD455A14A}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{CF601F1D-FB23-498D-8529-D51FD455A14A}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{CF601F1D-FB23-498D-8529-D51FD455A14A}.Release|Win32.ActiveCfg = Release|Win32
+		{CF601F1D-FB23-498D-8529-D51FD455A14A}.Release|Win32.Build.0 = Release|Win32
+		{CF601F1D-FB23-498D-8529-D51FD455A14A}.Release|x64.ActiveCfg = Release|x64
+		{CF601F1D-FB23-498D-8529-D51FD455A14A}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

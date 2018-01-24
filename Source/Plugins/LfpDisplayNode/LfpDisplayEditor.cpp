@@ -56,6 +56,16 @@ LfpDisplayEditor::~LfpDisplayEditor()
 {
 }
 
+void LfpDisplayEditor::startAcquisition()
+{
+	subprocessorSelection->setEnabled(false);
+}
+
+void LfpDisplayEditor::stopAcquisition()
+{
+	subprocessorSelection->setEnabled(true);
+}
+
 Visualizer* LfpDisplayEditor::createNewCanvas()
 {
     canvas = new LfpDisplayCanvas(lfpProcessor);
@@ -138,7 +148,7 @@ void LfpDisplayEditor::updateSubprocessorSelectorOptions()
         sampleRateLabelText += String(inputSampleRates[*(inputSubprocessorIndices.begin()+subprocessorToSet)]);
         
         subprocessorSampleRateLabel->setText(sampleRateLabelText, dontSendNotification);
-        setCanvasDrawableSubprocessor(subprocessorToSet);
+        //setCanvasDrawableSubprocessor(subprocessorToSet);
     }
     else
     {
@@ -147,7 +157,7 @@ void LfpDisplayEditor::updateSubprocessorSelectorOptions()
         
         String sampleRateLabelText = "Sample Rate: <not available>";
         subprocessorSampleRateLabel->setText(sampleRateLabelText, dontSendNotification);
-        setCanvasDrawableSubprocessor(-1);
+        //setCanvasDrawableSubprocessor(-1);
         
     }
 }

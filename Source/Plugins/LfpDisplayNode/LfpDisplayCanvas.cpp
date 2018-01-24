@@ -214,9 +214,9 @@ void LfpDisplayCanvas::update()
 {
 	if (true)
 	{
-
-	
     nChans = jmax(processor->getNumSubprocessorChannels(), 0);
+
+	std::cout << "Num chans: " << nChans << std::endl;
 
     resizeSamplesPerPixelBuffer(nChans);
 
@@ -229,21 +229,33 @@ void LfpDisplayCanvas::update()
     // must manually ensure that overlapSelection propagates up to canvas
     channelOverlapFactor = options->selectedOverlapValue.getFloatValue();
 
-    for (int i = 0; i <= nChans; i++) // extra channel for events
+	std::cout << "Checking channels: " << nChans << std::endl;
+	for (int i = 0; i <= processor->getNumInputs() + 1; i++) // extra channel for events
     {
+		//std::cout << i << std::endl;
 		if (processor->getNumInputs() > 0)
 		{
-			if (i < nChans)
-				sampleRate.add(processor->getDataChannel(i)->getSampleRate());
+			if (i < processor->getNumInputs())
+			{
+				if (processor->getDataChannel(i)->getSubProcessorIdx() == drawableSubprocessor)
+				{
+					sampleRate.add(processor->getDataChannel(i)->getSampleRate());
+					std::cout << "Adding sample rate " << processor->getDataChannel(i)->getSampleRate() << std::endl;
+				}
+					
+			}
 			else
 			{
 				//Since for now the canvas only supports one event channel, find the first TTL one and use that as sampleRate.
 				//This is a bit hackish and should be fixed for proper multi-ttl-channel support
+
 				for (int c = 0; c < processor->getTotalEventChannels(); c++)
 				{
 					if (processor->getEventChannel(c)->getChannelType() == EventChannel::TTL)
 					{
 						sampleRate.add(processor->getEventChannel(c)->getSampleRate());
+						std::cout << "Sample rate = " << processor->getEventChannel(c)->getSampleRate() << std::endl;
+
 					}
 				}
 			}
@@ -259,18 +271,24 @@ void LfpDisplayCanvas::update()
         lastScreenBufferIndex.add(0);
     }
 
+	lfpDisplay->setDisplayedSampleRate(sampleRate[0]); // only one sample rate possible for now
+	std::cout << "Setting display sample rate to " << sampleRate[0] << std::endl;
+
+	std::cout << "Checking channel alignment: " << nChans << std::endl;
     if (nChans != lfpDisplay->getNumChannels())
     {
-
+		std::cout << "Refreshing screen buffer" << std::endl;
         refreshScreenBuffer();
 
-        lfpDisplay->setNumChannels(nChans); // add an extra channel for events
+		std::cout << "Changing channels on LFP display" << std::endl;
+        lfpDisplay->setNumChannels(nChans + 1); // add an extra channel for events
 
         // update channel names
+		//std::cout << "Updating channel names" << std::endl;
 		for (int i = 0; i < nChans; i++)
         {
 
-            String chName = processor->getDataChannel(i)->getName();
+           String chName = processor->getDataChannel(i)->getName();
 
             lfpDisplay->channelInfo[i]->setName(chName);
             lfpDisplay->setEnabledState(isChannelEnabled[i], i);
@@ -289,11 +307,13 @@ void LfpDisplayCanvas::update()
     {
 		for (int i = 0; i < nChans; i++)
         {
+			//std::cout << i << std::endl;
             lfpDisplay->channels[i]->updateType();
             lfpDisplay->channelInfo[i]->updateType();
         }
         
-        if (nChans > 0)
+		if (nChans > 0)
+			std::cout << "Rebuilding drawable channels" << std::endl;
             lfpDisplay->rebuildDrawableChannelsList();
     }
     
@@ -358,6 +378,9 @@ void LfpDisplayCanvas::updateScreenBuffer()
 
 		for (int channel = 0; channel <= nChans; channel++) // pull one extra channel for event display
 		{
+
+			//if (channel == 0)
+			//	std::cout << sampleRate[channel] << std::endl;
 
 			if (screenBufferIndex[channel] >= maxSamples) // wrap around if we reached right edge before
 				screenBufferIndex.set(channel, 0);
@@ -648,6 +671,9 @@ void LfpDisplayCanvas::setDrawableSubprocessor(int idx)
 {
 	drawableSubprocessor = idx;
     lfpDisplay->setDisplayedSubprocessor(idx);
+	std::cout << "Setting LFP canvas subprocessor to " << idx << std::endl;
+	processor->setSubprocessor(idx);
+	update();
 }
 
 void LfpDisplayCanvas::redraw()
@@ -1263,7 +1289,7 @@ void LfpDisplayOptions::resized()
     brightnessSliderB->setBounds(170,getHeight()-160,100,22);
     sliderBLabel->setBounds(270, getHeight()-160, 180, 22);
     brightnessSliderB->setValue(0.1); //set default value
-
+	
     showHideOptionsButton->setBounds (getWidth() - 28, getHeight() - 28, 20, 20);
     
     int bh = 25/typeButtons.size();
@@ -2605,7 +2631,7 @@ float LfpDisplay::getDisplayedSampleRate()
 // already as a result of some other procedure
 void LfpDisplay::setDisplayedSampleRate(float samplerate)
 {
-//    std::cout << "Setting the displayed samplerate for LfpDisplayCanvas to " << samplerate << std::endl;
+    std::cout << "Setting the displayed samplerate for LfpDisplayCanvas to " << samplerate << std::endl;
     drawableSampleRate = samplerate;
 }
 
@@ -2617,6 +2643,8 @@ int LfpDisplay::getDisplayedSubprocessor()
 void LfpDisplay::setDisplayedSubprocessor(int subProcessorIdx)
 {
     drawableSubprocessorIdx = subProcessorIdx;
+	refresh();
+
 }
 
 bool LfpDisplay::getChannelsReversed()
@@ -2904,13 +2932,14 @@ void LfpDisplay::rebuildDrawableChannelsList()
     {
 //        std::cout << "\tchannel " << i << " has subprocessor index of "  << channelInfo[i]->getSubprocessorIdx() << std::endl;
         // if channel[i] is not sourced from the correct subprocessor, then hide it and continue
-        if (channelInfo[i]->getSubprocessorIdx() != getDisplayedSubprocessor())
-        {
-            channels[i]->setHidden(true);
-            channelInfo[i]->setHidden(true);
-            continue;
-        }
+        //if (channelInfo[i]->getSubprocessorIdx() != getDisplayedSubprocessor())
+        //{
+        //    channels[i]->setHidden(true);
+        //    channelInfo[i]->setHidden(true);
+        //    continue;
+        //}
         
+		//std::cout << "Checking for hidden channels" << std::endl;
         if (displaySkipAmt == 0 || (i % displaySkipAmt == 0)) // no skips, add all channels
         {
             channels[i]->setHidden(false);

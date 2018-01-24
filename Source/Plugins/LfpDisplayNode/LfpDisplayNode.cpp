@@ -45,7 +45,9 @@ LfpDisplayNode::LfpDisplayNode()
         arrayOfOnes[n] = 1;
     }
 
-	
+	subprocessorToDraw = 0;
+	numChannelsInSubprocessor = 0;
+	updateSubprocessorsFlag = true;
 }
 
 
@@ -64,8 +66,6 @@ AudioProcessorEditor* LfpDisplayNode::createEditor()
 
 void LfpDisplayNode::updateSettings()
 {
-
-	setSubprocessor(0);
 
     std::cout << "Setting num inputs on LfpDisplayNode to " << getNumInputs() << std::endl;
 
@@ -113,8 +113,15 @@ void LfpDisplayNode::updateSettings()
 	displayBufferIndex.insertMultiple(0, 0, numChannelsInSubprocessor + numEventChannels);
     
     // update the editor's subprocessor selection display
-    LfpDisplayEditor * ed = (LfpDisplayEditor*)getEditor();
-    ed->updateSubprocessorSelectorOptions();
+	if (updateSubprocessorsFlag)
+	{
+		LfpDisplayEditor * ed = (LfpDisplayEditor*)getEditor();
+		ed->updateSubprocessorSelectorOptions();
+	}
+	else {
+		updateSubprocessorsFlag = true;
+	}
+    
 }
 
 uint32 LfpDisplayNode::getChannelSourceID(const EventChannel* event) const
@@ -133,6 +140,9 @@ void LfpDisplayNode::setSubprocessor(int sp)
 {
 
 	subprocessorToDraw = sp;
+	std::cout << "LfpDisplayNode setting subprocessor to " << sp << std::endl;
+	updateSubprocessorsFlag = false;
+	updateSettings();
 	
 }
 
@@ -350,45 +360,46 @@ void LfpDisplayNode::process (AudioSampleBuffer& buffer)
 
 		if (true)
 		{
-
+			int channelIndex = -1;
 
 			for (int chan = 0; chan < buffer.getNumChannels(); ++chan)
 			{
 				if (getDataChannel(chan)->getSubProcessorIdx() == subprocessorToDraw)
 				{
-					const int samplesLeft = displayBuffer->getNumSamples() - displayBufferIndex[chan];
+					channelIndex++;
+					const int samplesLeft = displayBuffer->getNumSamples() - displayBufferIndex[channelIndex];
 					const int nSamples = getNumSamples(chan);
 
 					if (nSamples < samplesLeft)
 					{
-						displayBuffer->copyFrom(chan,                      // destChannel
-							displayBufferIndex[chan],  // destStartSample
+						displayBuffer->copyFrom(channelIndex,                      // destChannel
+							displayBufferIndex[channelIndex],  // destStartSample
 							buffer,                    // source
 							chan,                      // source channel
 							0,                         // source start sample
 							nSamples);                 // numSamples
 
-						displayBufferIndex.set(chan, displayBufferIndex[chan] + nSamples);
+						displayBufferIndex.set(channelIndex, displayBufferIndex[channelIndex] + nSamples);
 					}
 					else
 					{
 						const int extraSamples = nSamples - samplesLeft;
 
-						displayBuffer->copyFrom(chan,                      // destChannel
-							displayBufferIndex[chan],  // destStartSample
+						displayBuffer->copyFrom(channelIndex,                      // destChannel
+							displayBufferIndex[channelIndex],  // destStartSample
 							buffer,                    // source
 							chan,                      // source channel
 							0,                         // source start sample
 							samplesLeft);              // numSamples
 
-						displayBuffer->copyFrom(chan,                      // destChannel
+						displayBuffer->copyFrom(channelIndex,                      // destChannel
 							0,                         // destStartSample
 							buffer,                    // source
 							chan,                      // source channel
 							samplesLeft,               // source start sample
 							extraSamples);             // numSamples
 
-						displayBufferIndex.set(chan, extraSamples);
+						displayBufferIndex.set(channelIndex, extraSamples);
 					}
 				}
 			}

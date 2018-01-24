@@ -65,6 +65,9 @@ public:
         @see VisualizerEditor::buttonClicked
      */
     Visualizer* createNewCanvas();
+
+	void startAcquisition();
+	void stopAcquisition();
     
     /** Handle the state and options within the subprocessor sample rate
         selection combobox 
