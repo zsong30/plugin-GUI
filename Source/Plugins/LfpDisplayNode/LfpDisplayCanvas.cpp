@@ -240,7 +240,7 @@ void LfpDisplayCanvas::update()
 				if (processor->getDataChannel(i)->getSubProcessorIdx() == drawableSubprocessor)
 				{
 					sampleRate.add(processor->getDataChannel(i)->getSampleRate());
-					std::cout << "Adding sample rate " << processor->getDataChannel(i)->getSampleRate() << std::endl;
+					//std::cout << "Adding sample rate " << processor->getDataChannel(i)->getSampleRate() << std::endl;
 				}
 					
 			}
