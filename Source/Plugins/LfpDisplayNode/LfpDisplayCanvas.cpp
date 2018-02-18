@@ -281,7 +281,8 @@ void LfpDisplayCanvas::update()
         refreshScreenBuffer();
 
 		std::cout << "Changing channels on LFP display" << std::endl;
-        lfpDisplay->setNumChannels(nChans + 1); // add an extra channel for events
+		if (nChans > 0)
+			lfpDisplay->setNumChannels(nChans + 1); // add an extra channel for events
 
         // update channel names
 		//std::cout << "Updating channel names" << std::endl;
@@ -855,7 +856,7 @@ LfpDisplayOptions::LfpDisplayOptions(LfpDisplayCanvas* canvas_, LfpTimescale* ti
 	voltageRanges[DataChannel::HEADSTAGE_CHANNEL].add("5000");
 	voltageRanges[DataChannel::HEADSTAGE_CHANNEL].add("10000");
 	voltageRanges[DataChannel::HEADSTAGE_CHANNEL].add("15000");
-	selectedVoltageRange[DataChannel::HEADSTAGE_CHANNEL] = 8;
+	selectedVoltageRange[DataChannel::HEADSTAGE_CHANNEL] = 4;
 	rangeGain[DataChannel::HEADSTAGE_CHANNEL] = 1; //uV
 	rangeSteps[DataChannel::HEADSTAGE_CHANNEL] = 10;
     rangeUnits.add("uV");
@@ -986,7 +987,7 @@ LfpDisplayOptions::LfpDisplayOptions(LfpDisplayCanvas* canvas_, LfpTimescale* ti
     medianOffsetPlottingButton->setCorners(true, true, true, true);
     medianOffsetPlottingButton->addListener(this);
     medianOffsetPlottingButton->setClickingTogglesState(true);
-    medianOffsetPlottingButton->setToggleState(false, sendNotification);
+    medianOffsetPlottingButton->setToggleState(true, sendNotification);
     addAndMakeVisible(medianOffsetPlottingButton);
 
     
@@ -1019,7 +1020,7 @@ LfpDisplayOptions::LfpDisplayOptions(LfpDisplayCanvas* canvas_, LfpTimescale* ti
     spreads.add("80");
     spreads.add("90");
     spreads.add("100");
-    selectedSpread = 5;
+    selectedSpread = 4;
     selectedSpreadValue = spreads[selectedSpread-1];
 
 
@@ -2297,42 +2298,46 @@ void LfpDisplay::setNumChannels(int numChannels)
     totalHeight = 0;
     cachedDisplayChannelHeight = canvas->getChannelHeight();
 
-    for (int i = 0; i < numChans; i++)
-    {
-        //std::cout << "Adding new display for channel " << i << std::endl;
+	if (numChans > 0)
+	{
+		for (int i = 0; i < numChans; i++)
+		{
+			//std::cout << "Adding new display for channel " << i << std::endl;
 
-        LfpChannelDisplay* lfpChan = new LfpChannelDisplay(canvas, this, options, i);
+			LfpChannelDisplay* lfpChan = new LfpChannelDisplay(canvas, this, options, i);
 
-        //lfpChan->setColour(channelColours[i % channelColours.size()]);
-        lfpChan->setRange(range[options->getChannelType(i)]);
-        lfpChan->setChannelHeight(canvas->getChannelHeight());
-        
-        addAndMakeVisible(lfpChan);
+			//lfpChan->setColour(channelColours[i % channelColours.size()]);
+			lfpChan->setRange(range[options->getChannelType(i)]);
+			lfpChan->setChannelHeight(canvas->getChannelHeight());
 
-        channels.add(lfpChan);
+			addAndMakeVisible(lfpChan);
 
-        LfpChannelDisplayInfo* lfpInfo = new LfpChannelDisplayInfo(canvas, this, options, i);
+			channels.add(lfpChan);
 
-        //lfpInfo->setColour(channelColours[i % channelColours.size()]);
-        lfpInfo->setRange(range[options->getChannelType(i)]);
-        lfpInfo->setChannelHeight(canvas->getChannelHeight());
-        lfpInfo->setSubprocessorIdx(canvas->getChannelSubprocessorIdx(i));
+			LfpChannelDisplayInfo* lfpInfo = new LfpChannelDisplayInfo(canvas, this, options, i);
 
-        addAndMakeVisible(lfpInfo);
+			//lfpInfo->setColour(channelColours[i % channelColours.size()]);
+			lfpInfo->setRange(range[options->getChannelType(i)]);
+			lfpInfo->setChannelHeight(canvas->getChannelHeight());
+			lfpInfo->setSubprocessorIdx(canvas->getChannelSubprocessorIdx(i));
 
-        channelInfo.add(lfpInfo);
-        
-        drawableChannels.add(LfpChannelTrack{
-            lfpChan,
-            lfpInfo
-        });
+			addAndMakeVisible(lfpInfo);
 
-		savedChannelState.add(true);
+			channelInfo.add(lfpInfo);
 
-        totalHeight += lfpChan->getChannelHeight();
+			drawableChannels.add(LfpChannelTrack{
+				lfpChan,
+				lfpInfo
+			});
 
-    }
+			savedChannelState.add(true);
 
+			totalHeight += lfpChan->getChannelHeight();
+
+		}
+
+	}
+    
     setColors();
     
 
@@ -3134,8 +3139,8 @@ LfpChannelDisplay::LfpChannelDisplay(LfpDisplayCanvas* c, LfpDisplay* d, LfpDisp
     , chan(channelNumber)
     , drawableChan(channelNumber)
     , channelOverlap(300)
-    , channelHeight(40)
-    , range(1000.0f)
+    , channelHeight(30)
+    , range(250.0f)
     , isEnabled(true)
     , inputInverted(false)
     , canBeInverted(true)
