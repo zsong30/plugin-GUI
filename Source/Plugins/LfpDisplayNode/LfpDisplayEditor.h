@@ -97,6 +97,8 @@ private:
      */
     void setCanvasDrawableSubprocessor(int index);
 
+	int defaultSubprocessor;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LfpDisplayEditor);
 
 };

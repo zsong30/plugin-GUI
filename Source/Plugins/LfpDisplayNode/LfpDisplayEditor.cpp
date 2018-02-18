@@ -50,6 +50,8 @@ LfpDisplayEditor::LfpDisplayEditor(GenericProcessor* parentNode, bool useDefault
     subprocessorSampleRateLabel->setFont(Font(Font::getDefaultSerifFontName(), 14, Font::plain));
     subprocessorSampleRateLabel->setBounds(subprocessorSelection->getX(), subprocessorSelection->getBottom() + 10, 200, 40);
     addAndMakeVisible(subprocessorSampleRateLabel);
+
+	defaultSubprocessor = 0;
 }
 
 LfpDisplayEditor::~LfpDisplayEditor()
@@ -106,6 +108,7 @@ void LfpDisplayEditor::comboBoxChanged(juce::ComboBox *cb)
 {
     if (cb == subprocessorSelection)
     {
+		std::cout << "Setting subprocessor to " << cb->getSelectedId() << std::endl; 
         setCanvasDrawableSubprocessor(cb->getSelectedId() - 1);
     }
 }
@@ -129,26 +132,20 @@ void LfpDisplayEditor::updateSubprocessorSelectorOptions()
         
     }
     
-    int subprocessorToSet = -1;
-    if (inputSubprocessorIndices.size() > 0)
-    {
-        subprocessorToSet = 0;
-    }
-    
     for (int i = 0; i < inputSubprocessorIndices.size(); ++i)
     {
         subprocessorSelection->addItem (String (*(inputSubprocessorIndices.begin() + i)), i + 1);
     }
     
-    if (subprocessorToSet >= 0)
+    if (defaultSubprocessor >= 0)
     {
-        subprocessorSelection->setSelectedId(subprocessorToSet + 1, dontSendNotification);
+		subprocessorSelection->setSelectedId(defaultSubprocessor + 1, dontSendNotification);
         
         String sampleRateLabelText = "Sample Rate: ";
-        sampleRateLabelText += String(inputSampleRates[*(inputSubprocessorIndices.begin()+subprocessorToSet)]);
+		sampleRateLabelText += String(inputSampleRates[*(inputSubprocessorIndices.begin() + defaultSubprocessor)]);
         
         subprocessorSampleRateLabel->setText(sampleRateLabelText, dontSendNotification);
-        //setCanvasDrawableSubprocessor(subprocessorToSet);
+		//setCanvasDrawableSubprocessor(defaultSubprocessor);
     }
     else
     {
@@ -194,7 +191,7 @@ void LfpDisplayEditor::saveVisualizerParameters(XmlElement* xml)
 	int subprocessorItemId = subprocessorSelection->getSelectedId();
 
 	XmlElement* values = xml->createNewChildElement("VALUES");
-	values->setAttribute("SubprocessorId", subprocessorItemId);
+	values->setAttribute("SubprocessorId", subprocessorItemId - 1);
 }
 
 void LfpDisplayEditor::loadVisualizerParameters(XmlElement* xml)
@@ -205,7 +202,8 @@ void LfpDisplayEditor::loadVisualizerParameters(XmlElement* xml)
 		if (xmlNode->hasTagName("VALUES"))
 		{
 			std::cout << "LfpDisplay found " << xmlNode->getIntAttribute("SubprocessorId") << std::endl;
-			subprocessorSelection->setSelectedItemIndex(xmlNode->getIntAttribute("SubprocessorId"), sendNotification);
+			defaultSubprocessor = xmlNode->getIntAttribute("SubprocessorId");
+			subprocessorSelection->setSelectedItemIndex(defaultSubprocessor + 1, sendNotification);
 
 		}
 	}
