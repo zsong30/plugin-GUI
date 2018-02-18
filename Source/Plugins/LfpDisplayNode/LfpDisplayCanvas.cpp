@@ -755,13 +755,16 @@ void LfpDisplayCanvas::saveVisualizerParameters(XmlElement* xml)
 {
 
     options->saveParameters(xml);
+	LfpDisplayEditor* ed = (LfpDisplayEditor*) processor->getEditor();
+	ed->saveVisualizerParameters(xml);
 }
 
 
 void LfpDisplayCanvas::loadVisualizerParameters(XmlElement* xml)
 {
     options->loadParameters(xml);
-
+	LfpDisplayEditor* ed = (LfpDisplayEditor*) processor->getEditor();
+	ed->loadVisualizerParameters(xml);
 }
 
 

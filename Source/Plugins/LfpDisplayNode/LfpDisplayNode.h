@@ -70,6 +70,8 @@ public:
 	void setSubprocessor(int sp);
 	int getNumSubprocessorChannels();
 
+	float getSubprocessorSampleRate();
+
 private:
     void initializeEventChannels();
     void finalizeEventChannels();

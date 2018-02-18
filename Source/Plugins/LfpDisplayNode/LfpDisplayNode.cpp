@@ -151,6 +151,11 @@ int LfpDisplayNode::getNumSubprocessorChannels()
 	return numChannelsInSubprocessor;
 }
 
+float LfpDisplayNode::getSubprocessorSampleRate()
+{
+	return subprocessorSampleRate;
+}
+
 bool LfpDisplayNode::resizeBuffer()
 {
 	int nSamples = (int)subprocessorSampleRate * bufferLength;

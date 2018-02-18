@@ -169,7 +169,13 @@ void LfpDisplayEditor::setCanvasDrawableSubprocessor(int index)
 		if (index >= 0)
 		{
 			((LfpDisplayCanvas *)canvas.get())->setDrawableSubprocessor(*(inputSubprocessorIndices.begin() + index));
-			//lfpProcessor->setSubprocessorAndSampleRate(int sp, float sr)
+			float rate = lfpProcessor->getSubprocessorSampleRate();
+
+			String sampleRateLabelText = "Sample Rate: ";
+			sampleRateLabelText += String(rate);
+			subprocessorSampleRateLabel->setText(sampleRateLabelText, dontSendNotification);
+
+			std::cout << sampleRateLabelText << std::endl;
 		}
 		else
 		{
@@ -179,3 +185,29 @@ void LfpDisplayEditor::setCanvasDrawableSubprocessor(int index)
     }
 }
 
+
+void LfpDisplayEditor::saveVisualizerParameters(XmlElement* xml)
+{
+
+	xml->setAttribute("Type", "LfpDisplayEditor");
+
+	int subprocessorItemId = subprocessorSelection->getSelectedId();
+
+	XmlElement* values = xml->createNewChildElement("VALUES");
+	values->setAttribute("SubprocessorId", subprocessorItemId);
+}
+
+void LfpDisplayEditor::loadVisualizerParameters(XmlElement* xml)
+{
+
+	forEachXmlChildElement(*xml, xmlNode)
+	{
+		if (xmlNode->hasTagName("VALUES"))
+		{
+			std::cout << "LfpDisplay found " << xmlNode->getIntAttribute("SubprocessorId") << std::endl;
+			subprocessorSelection->setSelectedItemIndex(xmlNode->getIntAttribute("SubprocessorId"), sendNotification);
+
+		}
+	}
+
+}

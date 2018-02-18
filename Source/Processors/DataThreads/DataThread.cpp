@@ -86,6 +86,7 @@ void DataThread::updateChannels()
 		ttlEventWords.add(0);
 		timestamps.add(0);
 	}
+
     if (usesCustomNames())
     {
         channelInfo.resize (sn->getTotalDataChannels());

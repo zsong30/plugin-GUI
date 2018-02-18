@@ -68,6 +68,9 @@ public:
 
 	void startAcquisition();
 	void stopAcquisition();
+
+	void saveVisualizerParameters(XmlElement* xml);
+	void loadVisualizerParameters(XmlElement* xml);
     
     /** Handle the state and options within the subprocessor sample rate
         selection combobox 

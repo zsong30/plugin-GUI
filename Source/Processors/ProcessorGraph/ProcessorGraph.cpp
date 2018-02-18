@@ -651,7 +651,7 @@ bool ProcessorGraph::disableProcessors()
             std::cout << "Disabling " << p->getName() << std::endl;
 			if (node->nodeId != MESSAGE_CENTER_ID)
 				p->disableEditor();
-            allClear = p->disableProcessor();
+            allClear = p->disable();
 
             if (!allClear)
             {
